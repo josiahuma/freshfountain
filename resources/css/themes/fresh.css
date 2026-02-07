@@ -1,0 +1,28 @@
+/* Fresh Fountain Theme */
+@layer base {
+  :root {
+    /* Brand */
+    --brand: 0 74 173;        /* #004AAD */
+    --brand-dark: 0 59 138;   /* #003B8A (hover) */
+    --navy: 5 10 48;          /* #050A30 */
+
+    /* UI */
+    --ink: 15 23 42;          /* slate-900 */
+    --muted: 71 85 105;       /* slate-600 */
+    --panel: 255 255 255;
+    --bg: 248 250 252;        /* slate-50 */
+    --ring: 0 74 173;
+    --radius: 18px;
+  }
+
+  body {
+    background: rgb(var(--bg));
+    color: rgb(var(--ink));
+    font-family: "Manrope", ui-sans-serif, system-ui;
+  }
+
+  /* Make links feel branded */
+  a {
+    text-underline-offset: 3px;
+  }
+}

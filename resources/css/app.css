@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@import "./themes/fresh.css";
+
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+.swiper-button-prev, .swiper-button-next {
+  color: rgba(255,255,255,.85) !important;
+}
+.swiper-pagination-bullet {
+  background: rgba(255,255,255,.55) !important;
+}
+.swiper-pagination-bullet-active {
+  background: rgba(16,185,129,1) !important;
+}
+
