@@ -90,7 +90,7 @@
           <p class="mt-6 text-slate-600 leading-relaxed text-lg max-w-2xl">
             Our leadership team is passionate about serving our church and community with excellence, integrity, and a heart for people. With diverse backgrounds and a shared vision for the future, they are dedicated to guiding Fresh Fountain in fulfilling our mission and making a lasting impact.
           </p>
-          <a href="/leadership"  class="mt-6 inline-flex items-center justify-center rounded-2xl bg-[rgb(var(--brand))] px-7 py-3 text-white font-extrabold hover:bg-[rgb(var(--brand-dark))] transition">
+          <a href="/leaders"  class="mt-6 inline-flex items-center justify-center rounded-2xl bg-[rgb(var(--brand))] px-7 py-3 text-white font-extrabold hover:bg-[rgb(var(--brand-dark))] transition">
             Meet our leadership team
           </a>
         </div>
