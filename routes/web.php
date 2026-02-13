@@ -13,9 +13,14 @@ function pageViewFor(Page $page): string
         'service' => 'pages.service',
         'services_index' => 'pages.services_index',
         'about'   => 'pages.about',
+        'leaders' => 'pages.leaders',
         'contact' => 'pages.contact',
         'jobs'    => 'pages.jobs',
         'blog'    => 'pages.blog',
+        'course'  => 'pages.course',
+        'courses_index' => 'pages.courses_index',
+        'units'   => 'pages.units',
+        'units_index' => 'pages.units_index',
         default   => 'pages.service',
     };
 }

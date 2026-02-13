@@ -138,7 +138,8 @@
                 <a href="/#watch" class="transition">Watch Services</a>
                 <a href="/#event-section" class="transition">What's On</a>
                 <a href="/events" class="transition">Major Events</a>
-                <a href="#" class="transition">Courses</a>
+                <a href="/units" class="transition">Get Involved</a>
+                <a href="/courses" class="transition">Courses</a>
                 <a href="/contact" class="transition">Contact</a>
 
                 {{-- Social icons --}}
@@ -221,7 +222,8 @@
             <a href="/#watch" class="hover:text-white transition" onclick="document.getElementById('navToggle').checked=false">Watch Services</a>
             <a href="/#event-section" class="hover:text-white transition" onclick="document.getElementById('navToggle').checked=false">What's On</a>
             <a href="/events" class="hover:text-white transition" onclick="document.getElementById('navToggle').checked=false">Major Events</a>
-            <a href="#" class="hover:text-white transition" onclick="document.getElementById('navToggle').checked=false">Courses</a>
+            <a href="/units" class="hover:text-white transition" onclick="document.getElementById('navToggle').checked=false">Get Involved</a>
+            <a href="/courses" class="hover:text-white transition" onclick="document.getElementById('navToggle').checked=false">Courses</a>
             <a href="/contact" class="hover:text-white transition" onclick="document.getElementById('navToggle').checked=false">Contact</a>
 
             <div class="flex flex-wrap items-center gap-2 pt-2">
@@ -302,22 +304,22 @@
             </div>
 
             <div>
-                <h3 class="text-sm font-extrabold uppercase tracking-wider text-white/80">Our Heart</h3>
+                <h3 class="text-sm font-extrabold uppercase tracking-wider text-white/80">Our Mandate</h3>
                 <ul class="mt-5 space-y-3 text-white/80">
-                    <li><a href="/vision" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Vision</a></li>
-                    <li><a href="/leaders" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Leaders</a></li>
-                    <li><a href="/statements" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Views/Statements</a></li>
-                    <li><a href="/heart-nottingham" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Heart Nottingham</a></li>
+                    <li><a href="/about-us" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Vision</a></li>
+                    <li><a href="/about-us" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Mission</a></li>
+                    <li><a href="/about-us" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Core Values</a></li>
+                    <li><a href="/leaders" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Leadership</a></li>
                 </ul>
             </div>
 
             <div>
                 <h3 class="text-sm font-extrabold uppercase tracking-wider text-white/80">Get Involved</h3>
                 <ul class="mt-5 space-y-3 text-white/80">
-                    <li><a href="/kids" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Kids</a></li>
-                    <li><a href="/youth" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Youth</a></li>
-                    <li><a href="/students" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Students</a></li>
-                    <li><a href="/young-adults" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Young Adults</a></li>
+                    <li><a href="/membership" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Become a member</a></li>
+                    <li><a href="/baptism" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Get baptized</a></li>
+                    <li><a href="/units" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Join a unit</a></li>
+                    <li><a href="/contact" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Speak to a leader</a></li>
                 </ul>
             </div>
 

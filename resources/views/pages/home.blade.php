@@ -75,7 +75,7 @@
   $times = data_get($page->sections, 'service_times.items', []);
   if (!is_array($times) || !count($times)) {
       $times = [
-        ['title' => 'Sunday Encounter', 'text' => '10:30 AM'],
+        ['title' => 'Sunday Encounter', 'text' => '11:00 AM'],
         ['title' => 'Tuesday Overflow (Online Bible Study)', 'text' => 'Tuesday • 7:00 PM'],
         ['title' => 'Refresh (Worship & Miracle Service)', 'text' => '1st Fridays • 7:00 PM'],
       ];
@@ -141,7 +141,7 @@
           class="text-4xl md:text-6xl lg:text-7xl
                  font-serif font-semibold tracking-wide
                  leading-tight">
-          {{ data_get($hero, 'title', 'Welcome to Fresh Fountain Church') }}
+          {{ data_get($hero, 'title', 'Welcome to Fresh Fountain Network') }}
         </h1>
 
         @if(data_get($hero, 'subtitle'))
@@ -200,10 +200,13 @@
         <div class="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
           @foreach($times as $t)
             <div class="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
-              <div class="text-sm font-extrabold text-slate-900">{{ data_get($t, 'title', 'Service') }}</div>
-              <div class="mt-2 text-[rgb(var(--brand))] font-extrabold text-lg">
+              <a href="{{ data_get($t, 'link', '/events') }}"
+                 class="text-sm font-extrabold text-slate-900 hover:text-[rgb(var(--brand-dark))] transition">
+                {{ data_get($t, 'title', 'Service') }}
+                <div class="mt-2 text-[rgb(var(--brand))] font-extrabold text-lg">
                 {{ data_get($t, 'text', '') }}
               </div>
+              </a>              
             </div>
           @endforeach
         </div>

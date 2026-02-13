@@ -66,9 +66,14 @@ class PageForm
                                 'service' => 'Service Page',
                                 'services_index' => 'Services Listing Page',
                                 'about' => 'About Page',
+                                'leaders' => 'Leaders Page',
                                 'contact' => 'Contact Page',
                                 'jobs' => 'Job Portal Page',
                                 'blog' => 'Blog Page',
+                                'course' => 'Course Page',
+                                'courses_index' => 'Courses Listing Page',
+                                'units' => 'Units Page',
+                                'units_index' => 'Units Listing Page',
                             ])
                             ->default('service')
                             ->live(),
@@ -134,6 +139,240 @@ class PageForm
                                 ->columnSpanFull(),
                         ]),
 
+                        // =========================================================
+                        // LEADERS PAGE CONTENT
+                        // =========================================================
+                        Section::make('Content (Leaders Page)')
+                            ->visible(fn ($get) => $get('template') === 'leaders')
+                            ->columns(2)
+                            ->schema([
+                                FileUpload::make('banner_image')
+                                    ->label('Page Banner Image (optional)')
+                                    ->disk('public')
+                                    ->directory('pages/banners')
+                                    ->visibility('public')
+                                    ->image()
+                                    ->imageEditor()
+                                    ->dehydrateStateUsing(fn ($state) => is_array($state) ? collect($state)->values()->first() : $state)
+                                    ->columnSpanFull(),
+
+                                Textarea::make('excerpt')
+                                    ->label('Short Intro (optional)')
+                                    ->rows(3)
+                                    ->helperText('This shows under the page title on the banner.')
+                                    ->columnSpanFull(),
+
+                                // -----------------------------
+                                // Pastors
+                                // -----------------------------
+                                Section::make('Pastors')
+                                    ->columnSpanFull()
+                                    ->schema([
+                                        Repeater::make('sections.leaders.pastors')
+                                            ->label('Pastors')
+                                            ->default([])
+                                            ->reorderable()
+                                            ->collapsed()
+                                            ->schema([
+                                                FileUpload::make('image')
+                                                    ->label('Photo')
+                                                    ->disk('public')
+                                                    ->directory('pages/leaders')
+                                                    ->visibility('public')
+                                                    ->image()
+                                                    ->imageEditor()
+                                                    ->dehydrateStateUsing(fn ($state) => is_array($state) ? collect($state)->values()->first() : $state)
+                                                    ->required(),
+
+                                                TextInput::make('name')->required()->label('Name'),
+                                                TextInput::make('position')->required()->label('Position / Title')->default('Pastor'),
+                                                TextInput::make('unit')->label('Unit (optional)')->placeholder('e.g. Senior Pastor / Lead Pastor'),
+                                            ])
+                                            ->columns(2),
+                                    ]),
+
+                                // -----------------------------
+                                // Trustees
+                                // -----------------------------
+                                Section::make('Trustees')
+                                    ->columnSpanFull()
+                                    ->schema([
+                                        Repeater::make('sections.leaders.trustees')
+                                            ->label('Trustees')
+                                            ->default([])
+                                            ->reorderable()
+                                            ->collapsed()
+                                            ->schema([
+                                                FileUpload::make('image')
+                                                    ->label('Photo')
+                                                    ->disk('public')
+                                                    ->directory('pages/leaders')
+                                                    ->visibility('public')
+                                                    ->image()
+                                                    ->imageEditor()
+                                                    ->dehydrateStateUsing(fn ($state) => is_array($state) ? collect($state)->values()->first() : $state)
+                                                    ->required(),
+
+                                                TextInput::make('name')->required()->label('Name'),
+                                                TextInput::make('position')->required()->label('Position / Title')->default('Trustee'),
+                                                TextInput::make('unit')->label('Unit (optional)')->placeholder('e.g. Board of Trustees'),
+                                            ])
+                                            ->columns(2),
+                                    ]),
+
+                                // -----------------------------
+                                // Ministers
+                                // -----------------------------
+                                Section::make('Ministers')
+                                    ->columnSpanFull()
+                                    ->schema([
+                                        Repeater::make('sections.leaders.ministers')
+                                            ->label('Ministers')
+                                            ->default([])
+                                            ->reorderable()
+                                            ->collapsed()
+                                            ->schema([
+                                                FileUpload::make('image')
+                                                    ->label('Photo')
+                                                    ->disk('public')
+                                                    ->directory('pages/leaders')
+                                                    ->visibility('public')
+                                                    ->image()
+                                                    ->imageEditor()
+                                                    ->dehydrateStateUsing(fn ($state) => is_array($state) ? collect($state)->values()->first() : $state)
+                                                    ->required(),
+
+                                                TextInput::make('name')->required()->label('Name'),
+                                                TextInput::make('position')->required()->label('Position / Title')->default('Minister'),
+                                                TextInput::make('unit')->label('Unit (optional)')->placeholder('e.g. Worship / Prayer / Media'),
+                                            ])
+                                            ->columns(2),
+                                    ]),
+
+                                // -----------------------------
+                                // Unit Heads
+                                // -----------------------------
+                                Section::make('Unit Heads')
+                                    ->columnSpanFull()
+                                    ->schema([
+                                        Repeater::make('sections.leaders.unit_heads')
+                                            ->label('Unit Heads')
+                                            ->default([])
+                                            ->reorderable()
+                                            ->collapsed()
+                                            ->schema([
+                                                FileUpload::make('image')
+                                                    ->label('Photo')
+                                                    ->disk('public')
+                                                    ->directory('pages/leaders')
+                                                    ->visibility('public')
+                                                    ->image()
+                                                    ->imageEditor()
+                                                    ->dehydrateStateUsing(fn ($state) => is_array($state) ? collect($state)->values()->first() : $state)
+                                                    ->required(),
+
+                                                TextInput::make('name')->required()->label('Name'),
+                                                TextInput::make('unit')->required()->label('Unit Led')->placeholder('e.g. Choir / Protocol / Media'),
+                                                TextInput::make('position')->label('Position / Title')->default('Unit Head'),
+                                            ])
+                                            ->columns(2),
+                                    ]),
+                            ]),
+
+                    // =========================================================
+                    // COURSE PAGE CONTENT
+                    // =========================================================
+                    Section::make('Content (Course Page)')
+                        ->visible(fn ($get) => $get('template') === 'course')
+                        ->columns(2)
+                        ->schema([
+                            FileUpload::make('banner_image')
+                                ->label('Course Banner Image (used on course page + courses index tile)')
+                                ->disk('public')
+                                ->directory('pages/courses/banners')
+                                ->visibility('public')
+                                ->image()
+                                ->imageEditor()
+                                ->dehydrateStateUsing(fn ($state) => is_array($state) ? collect($state)->values()->first() : $state)
+                                ->columnSpanFull(),
+
+                            Textarea::make('excerpt')
+                                ->label('Short Intro (optional)')
+                                ->rows(3)
+                                ->helperText('Shows under the headline on the course page and card.'),
+
+                            TextInput::make('sections.course.kicker')
+                                ->label('Kicker (small top text)')
+                                ->default('COURSE'),
+
+                            TextInput::make('sections.course.headline')
+                                ->label('Headline')
+                                ->default('Grow in faith and understanding')
+                                ->columnSpanFull(),
+
+                            Textarea::make('sections.course.body')
+                                ->label('Body text')
+                                ->rows(4)
+                                ->columnSpanFull(),
+
+                            TextInput::make('sections.course.button_text')
+                                ->label('Button text')
+                                ->default('Take Course'),
+
+                            TextInput::make('sections.course.button_link')
+                                ->label('Button link (external)')
+                                ->default('https://courses.freshfountain.org')
+                                ->url()
+                                ->columnSpanFull(),
+                        ]),
+
+
+                    // =========================================================
+                    // UNIT PAGE CONTENT
+                    // =========================================================
+                    Section::make('Content (Unit Page)')
+                        ->visible(fn ($get) => $get('template') === 'units')
+                        ->columns(2)
+                        ->schema([
+                            FileUpload::make('banner_image')
+                                ->label('Unit Banner Image (used on unit page + units index tile)')
+                                ->disk('public')
+                                ->directory('pages/units/banners')
+                                ->visibility('public')
+                                ->image()
+                                ->imageEditor()
+                                ->dehydrateStateUsing(fn ($state) => is_array($state) ? collect($state)->values()->first() : $state)
+                                ->columnSpanFull(),
+
+                            Textarea::make('excerpt')
+                                ->label('Short Intro (optional)')
+                                ->rows(3)
+                                ->helperText('Shows under the headline on the unit page and card.'),
+
+                            TextInput::make('sections.units.kicker')
+                                ->label('Kicker (small top text)')
+                                ->default('UNITS & TEAMS'),
+
+                            TextInput::make('sections.units.headline')
+                                ->label('Headline')
+                                ->default('Grow in faith and understanding')
+                                ->columnSpanFull(),
+
+                            Textarea::make('sections.units.body')
+                                ->label('Body text')
+                                ->rows(4)
+                                ->columnSpanFull(),
+
+                            TextInput::make('sections.units.button_text')
+                                ->label('Button text')
+                                ->default('Join Unit'),
+
+                            TextInput::make('sections.units.button_link')
+                                ->label('Button link (external)')
+                                ->default('https://courses.freshfountain.org')
+                                ->url()
+                                ->columnSpanFull(),
+                        ]),
 
                 // =========================================================
                 // SERVICE PAGE CONTENT
