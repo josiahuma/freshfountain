@@ -148,30 +148,6 @@
           </div>
         </div>
 
-        {{-- Service times --}}
-        <div class="rounded-[34px] border border-slate-200 bg-white p-8 ff-soft">
-          <div class="flex items-end justify-between gap-4">
-            <div>
-              <p class="text-sm font-extrabold uppercase tracking-wide text-[rgb(var(--brand))]">Service times</p>
-              <h3 class="mt-2 text-xl font-extrabold text-slate-900">Join us</h3>
-            </div>
-            <a href="/#visit" class="text-sm font-extrabold text-[rgb(var(--brand))] hover:opacity-80 transition">
-              Plan a visit →
-            </a>
-          </div>
-
-          <div class="mt-6 grid gap-3">
-            @foreach($times as $t)
-              <div class="rounded-3xl bg-slate-50 border border-slate-200 p-5">
-                <div class="font-extrabold text-slate-900">{{ data_get($t, 'title', 'Service') }}</div>
-                <div class="mt-2 font-extrabold text-[rgb(var(--brand))]">
-                  {{ data_get($t, 'text', '') }}
-                </div>
-              </div>
-            @endforeach
-          </div>
-        </div>
-
       </div>
 
       {{-- RIGHT: FORM --}}
