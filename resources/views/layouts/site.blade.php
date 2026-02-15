@@ -301,6 +301,38 @@
                 <p class="mt-6 text-white/70 leading-relaxed max-w-xl">
                     {{ data_get($footer, 'about_text', 'We are a faith-led community committed to worship, discipleship, and outreach. Join us as we grow together and serve our city with love.') }}
                 </p>
+
+                {{-- Social & Contact --}}
+
+                @php
+                $socialLinks = data_get($footer, 'social_links', []);
+                @endphp
+
+                @if(is_array($socialLinks) && count($socialLinks))
+                <div class="mt-10 flex flex-wrap items-center gap-3">
+                    @foreach($socialLinks as $s)
+                    @php
+                        $platform = strtolower((string) data_get($s, 'platform'));
+                        $url = data_get($s, 'url');
+                    @endphp
+
+                    @if($url)
+                        <a href="{{ $url }}" target="_blank" rel="noopener"
+                        class="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-4 py-2
+                                text-white/85 hover:text-white hover:bg-white/10 transition">
+
+                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-white/10">
+                            @includeIf('partials.social-icons.' . $platform)
+                        </span>
+
+                        <span class="text-sm font-bold capitalize">
+                            {{ $platform === 'twitter' ? 'X' : $platform }}
+                        </span>
+                        </a>
+                    @endif
+                    @endforeach
+                </div>
+                @endif
             </div>
 
             <div>
