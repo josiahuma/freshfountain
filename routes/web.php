@@ -21,6 +21,7 @@ function pageViewFor(Page $page): string
         'courses_index' => 'pages.courses_index',
         'units'   => 'pages.units',
         'units_index' => 'pages.units_index',
+        'giving'  => 'pages.giving',
         default   => 'pages.service',
     };
 }

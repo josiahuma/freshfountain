@@ -182,7 +182,7 @@
                 </div>
 
                 {{-- CTA --}}
-                <a href="/contact"
+                <a href="/giving"
                    class="ml-2 inline-flex items-center justify-center rounded-xl
                           bg-[rgb(var(--brand))] px-5 py-2.5 text-white shadow-sm
                           hover:bg-[rgb(var(--brand-dark))] transition">
@@ -250,12 +250,12 @@
                 @endif
             </div>
 
-            <a href="/contact"
+            <a href="/giving"
                class="mt-2 inline-flex items-center justify-center rounded-xl
                       bg-[rgb(var(--brand))] px-5 py-3 text-white shadow-sm
                       hover:bg-[rgb(var(--brand-dark))] transition"
                onclick="document.getElementById('navToggle').checked=false">
-                Get in touch
+                Giving
             </a>
 
             {{-- Close button --}}

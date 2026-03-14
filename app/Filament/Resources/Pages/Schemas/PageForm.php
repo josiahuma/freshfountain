@@ -74,6 +74,7 @@ class PageForm
                                 'courses_index' => 'Courses Listing Page',
                                 'units' => 'Units Page',
                                 'units_index' => 'Units Listing Page',
+                                'giving' => 'Giving Page',
                             ])
                             ->default('service')
                             ->live(),
@@ -452,6 +453,154 @@ class PageForm
                             ->label('Optional Body Content (below form)')
                             ->columnSpanFull(),
                     ]),
+
+
+                    // =========================================================
+                    // GIVING PAGE CONTENT
+                    // =========================================================
+                    Section::make('Content (Giving Page)')
+                        ->visible(fn ($get) => $get('template') === 'giving')
+                        ->columns(2)
+                        ->schema([
+                            FileUpload::make('banner_image')
+                                ->label('Page Banner Image (optional)')
+                                ->disk('public')
+                                ->directory('pages/banners')
+                                ->visibility('public')
+                                ->image()
+                                ->imageEditor()
+                                ->dehydrateStateUsing(fn ($state) => is_array($state) ? collect($state)->values()->first() : $state)
+                                ->columnSpanFull(),
+
+                            Textarea::make('excerpt')
+                                ->label('Short Intro (optional)')
+                                ->rows(3)
+                                ->helperText('This shows under the page title on the banner.')
+                                ->columnSpanFull(),
+
+                            TextInput::make('sections.giving.kicker')
+                                ->label('Small Top Text')
+                                ->default('GIVING'),
+
+                            TextInput::make('sections.giving.hero_title')
+                                ->label('Intro Title')
+                                ->default('Partner with us through your giving'),
+
+                            Textarea::make('sections.giving.hero_text')
+                                ->label('Intro Text')
+                                ->rows(5)
+                                ->default('Your generosity helps us advance the work of ministry, support people in need, and expand the impact of Fresh Fountain.')
+                                ->columnSpanFull(),
+
+                            // ONLINE GIVING
+                            Section::make('Online Giving')
+                                ->columnSpanFull()
+                                ->columns(2)
+                                ->schema([
+                                    TextInput::make('sections.giving.online_title')
+                                        ->label('Online Giving Title')
+                                        ->default('Give Online'),
+
+                                    TextInput::make('sections.giving.online_button_text')
+                                        ->label('Online Giving Button Text')
+                                        ->default('Give Now'),
+
+                                    Textarea::make('sections.giving.online_text')
+                                        ->label('Online Giving Text')
+                                        ->rows(4)
+                                        ->default('You can support Fresh Fountain securely online using our giving platform. Click the button below to make a one-time gift or set up recurring giving.')
+                                        ->columnSpanFull(),
+
+                                    TextInput::make('sections.giving.online_button_link')
+                                        ->label('Online Giving Button Link')
+                                        ->url()
+                                        ->placeholder('https://...')
+                                        ->columnSpanFull(),
+
+                                    TextInput::make('sections.giving.online_secondary_button_text')
+                                        ->label('Secondary Button Text (optional)')
+                                        ->default('Need Help?'),
+
+                                    TextInput::make('sections.giving.online_secondary_button_link')
+                                        ->label('Secondary Button Link (optional)')
+                                        ->placeholder('/contact')
+                                        ->columnSpanFull(),
+                                ]),
+
+                            // BANK DETAILS
+                            Section::make('Bank Details')
+                                ->columnSpanFull()
+                                ->columns(2)
+                                ->schema([
+                                    TextInput::make('sections.giving.bank_title')
+                                        ->label('Bank Section Title')
+                                        ->default('Bank Details'),
+
+                                    TextInput::make('sections.giving.bank_name')
+                                        ->label('Bank Name')
+                                        ->default('Access Bank'),
+
+                                    TextInput::make('sections.giving.account_name')
+                                        ->label('Account Name')
+                                        ->default('Fresh Fountain Church'),
+
+                                    TextInput::make('sections.giving.sort_code')
+                                        ->label('Sort Code / Branch Code')
+                                        ->placeholder('00-00-00'),
+
+                                    TextInput::make('sections.giving.account_number')
+                                        ->label('Account Number')
+                                        ->placeholder('12345678'),
+
+                                    TextInput::make('sections.giving.reference')
+                                        ->label('Payment Reference (optional)')
+                                        ->placeholder('Tithe / Offering / Building Fund'),
+
+                                    Textarea::make('sections.giving.bank_note')
+                                        ->label('Bank Transfer Note')
+                                        ->rows(4)
+                                        ->default('If you are giving by bank transfer, please use a clear payment reference so we can identify your gift correctly.')
+                                        ->columnSpanFull(),
+                                ]),
+
+                            // OTHER GIVING METHODS
+                            Section::make('Other Ways To Give')
+                                ->columnSpanFull()
+                                ->schema([
+                                    Repeater::make('sections.giving.methods')
+                                        ->label('Other Giving Methods')
+                                        ->default([
+                                            [
+                                                'title' => 'In Person',
+                                                'text' => 'You can also give during any of our worship services.',
+                                                'button_text' => 'Plan Your Visit',
+                                                'button_link' => '/contact',
+                                            ],
+                                        ])
+                                        ->schema([
+                                            TextInput::make('title')
+                                                ->label('Method Title')
+                                                ->required(),
+
+                                            Textarea::make('text')
+                                                ->label('Method Description')
+                                                ->rows(3),
+
+                                            TextInput::make('button_text')
+                                                ->label('Button Text (optional)'),
+
+                                            TextInput::make('button_link')
+                                                ->label('Button Link (optional)')
+                                                ->placeholder('/contact'),
+                                        ])
+                                        ->columns(2)
+                                        ->columnSpanFull(),
+                                ]),
+
+                            RichEditor::make('content')
+                                ->label('Optional Extra Content')
+                                ->columnSpanFull(),
+                        ]),
 
                 // =========================================================
                 // JOB PORTAL PAGE CONTENT (Recruitment instructions page)
