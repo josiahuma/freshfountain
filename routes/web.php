@@ -5,6 +5,8 @@ use App\Http\Controllers\Admin\JobApplicationPdfController;
 use App\Models\BlogPost;
 use App\Models\Page;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\SitemapController;
 
 function pageViewFor(Page $page): string
 {
@@ -39,6 +41,8 @@ Route::get('/careers/{slug}', [CareerController::class, 'show'])->name('careers.
 Route::get('/careers/{slug}/apply', [CareerController::class, 'apply'])->name('careers.apply');
 Route::post('/careers/{slug}/apply', [CareerController::class, 'submit'])->name('careers.submit');
 Route::get('/careers/{slug}/success', [CareerController::class, 'success'])->name('careers.success');
+
+Route::get('/sitemap.xml', [SitemapController::class, 'index']);
 
 //
 // ✅ PDF export for a single application (MUST be above catch-all)
