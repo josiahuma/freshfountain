@@ -621,135 +621,650 @@
 @endphp
 
 <section class="bg-white">
-  <div id="event-section" class="max-w-[1400px] mx-auto px-4 py-16">
+    <div
+        id="event-section"
+        class="mx-auto max-w-[1400px] px-4 py-16 sm:px-6 lg:px-8 lg:py-20"
+    >
+        {{-- Section heading --}}
+        <div class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+            <div>
+                <p class="text-sm font-extrabold uppercase tracking-[0.14em] text-slate-500">
+                    What’s On
+                </p>
 
-    <div class="flex items-end justify-between gap-6 flex-wrap">
-      <div>
-        <p class="text-sm font-extrabold uppercase tracking-wide text-slate-500">
-          What’s On
-        </p>
-        <h2 class="mt-2 text-3xl md:text-4xl font-extrabold text-slate-900">
-          Upcoming Events
-        </h2>
-        <p class="mt-2 text-slate-600 max-w-2xl">
-          Join us this week — services, gatherings, and special events.
-        </p>
-      </div>
+                <h2 class="mt-2 text-3xl font-extrabold tracking-tight text-slate-950 md:text-4xl">
+                    Upcoming Events
+                </h2>
 
-      <a href="{{ $eventibBase . '/organizers/' . $organizerSlug }}" target="_blank" rel="noopener"
-         class="inline-flex items-center justify-center rounded-2xl bg-[rgb(var(--brand))] px-6 py-3 font-extrabold text-white
-                hover:bg-[rgb(var(--brand-dark))] transition">
-        View all events →
-      </a>
-    </div>
+                <p class="mt-3 max-w-2xl text-slate-600">
+                    Services, gatherings, conferences and special events
+                    happening at Fresh Fountain.
+                </p>
+            </div>
 
-    @if(is_array($events) && count($events))
-      <div class="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-        @foreach($events as $e)
-          @php
-            $title = (string) data_get($e, 'title', 'Event');
+            <a
+                href="{{ route('calendar.index') }}"
+                class="inline-flex w-fit items-center justify-center gap-2 rounded-2xl bg-[rgb(var(--brand))] px-6 py-3 font-extrabold text-white transition hover:bg-[rgb(var(--brand-dark))]"
+            >
+                View full calendar
 
-            // ✅ NEW API shape (from your updated Eventib controller)
-            $nextSessionDate = data_get($e, 'next_session.date');     // e.g. 2026-03-14
-            $nextSessionName = (string) data_get($e, 'next_session.name', '');
+                <span aria-hidden="true">
+                    →
+                </span>
+            </a>
+        </div>
 
-            // ✅ Banner url normalization (prevents 404)
-            $banner = $makeBannerUrl(data_get($e, 'banner'));
+        <div class="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
 
-            $location = (string) data_get($e, 'location', '');
-            $url = data_get($e, 'url') ?: ($eventibBase . '/events/' . (string) data_get($e, 'id'));
-
-            $dt = $nextSessionDate ? Carbon::parse($nextSessionDate) : null;
-
-            $day = $dt ? $dt->format('d') : '';
-            $month = $dt ? strtoupper($dt->format('M')) : '';
-            $dow = $dt ? strtoupper($dt->format('D')) : '';
-          @endphp
-
-          <a href="{{ $url }}" target="_blank" rel="noopener"
-             class="group rounded-3xl bg-white border border-slate-200 overflow-hidden
-                    shadow-[0_14px_40px_rgba(15,23,42,0.08)]
-                    hover:shadow-[0_22px_70px_rgba(15,23,42,0.14)]
-                    transition-all duration-300 hover:-translate-y-1">
-
-            {{-- Image header --}}
-            <div class="relative h-[220px] bg-slate-100 overflow-hidden">
-              @if($banner)
-                <img
-                  src="{{ $banner }}"
-                  alt="{{ $title }}"
-                  loading="lazy"
-                  class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-700"
-                >
-              @else
-                {{-- ✅ fallback if no banner --}}
-                <div class="absolute inset-0 bg-gradient-to-tr from-[rgb(var(--brand))]/25 via-slate-900/20 to-transparent"></div>
-                <div class="absolute inset-0 flex items-center justify-center">
-                  <div class="text-white/90 text-center px-6">
-                    <div class="text-xs font-extrabold uppercase tracking-widest opacity-80">Fresh Fountain</div>
-                    <div class="mt-2 text-2xl font-extrabold leading-tight">
-                      {{ \Illuminate\Support\Str::limit($title, 34) }}
+            {{-- Website calendar events --}}
+            <div>
+                <div class="mb-5 flex items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-xl font-extrabold text-slate-950">
+                            Regular church activities
+                        </h3>
                     </div>
-                  </div>
-                </div>
-              @endif
 
-              {{-- soft overlay --}}
-              <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent"></div>
-
-              {{-- session name + date pill --}}
-              <div class="absolute top-4 left-4 right-4 flex items-start justify-between gap-4">
-                <div class="text-white font-extrabold tracking-wide uppercase text-sm drop-shadow">
-                  {{ \Illuminate\Support\Str::limit($nextSessionName ?: 'Upcoming', 32) }}
+                    <a
+                        href="{{ route('calendar.index') }}"
+                        class="hidden text-sm font-extrabold text-[rgb(var(--brand))] transition hover:text-[rgb(var(--brand-dark))] sm:inline"
+                    >
+                        See all
+                    </a>
                 </div>
 
-                <div class="shrink-0 rounded-full bg-white shadow-lg border border-slate-100 w-[64px] h-[64px]
-                            flex flex-col items-center justify-center text-center">
-                  <div class="text-[10px] font-extrabold text-slate-500 -mb-1">{{ $dow }}</div>
-                  <div class="text-xl font-extrabold text-slate-900 leading-none">{{ $day }}</div>
-                  <div class="text-[10px] font-extrabold text-slate-500">{{ $month }}</div>
-                </div>
-              </div>
-            </div>
+                @if(isset($calendarEvents) && $calendarEvents->isNotEmpty())
+                    <div class="space-y-4">
+                        @foreach($calendarEvents as $calendarEvent)
+                            @php
+                                $eventDetails = $calendarEvent['extendedProps'] ?? [];
 
-            {{-- Body --}}
-            <div class="p-6">
-              <h3 class="text-lg font-extrabold text-slate-900 leading-snug">
-                {{ $title }}
-              </h3>
+                                $eventStart = \Carbon\CarbonImmutable::parse(
+                                    $calendarEvent['start']
+                                );
 
-              <div class="mt-4 space-y-2 text-sm text-slate-600">
-                @if($dt)
-                  <div class="flex items-center gap-2">
-                    <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100">🗓️</span>
-                    <span class="font-semibold">{{ $dt->format('jS F, Y') }}</span>
-                  </div>
+                                $eventColour =
+                                    $eventDetails['colour']
+                                    ?? $calendarEvent['backgroundColor']
+                                    ?? '#1d4ed8';
+
+                                $eventLocation =
+                                    $eventDetails['location']
+                                    ?? null;
+
+                                $eventTime =
+                                    $eventDetails['timeLabel']
+                                    ?? (
+                                        $calendarEvent['allDay']
+                                            ? 'All day'
+                                            : $eventStart->format('g:i A')
+                                    );
+                            @endphp
+
+                            <button
+                                type="button"
+                                class="homepage-calendar-event group grid w-full grid-cols-[82px_minmax(0,1fr)] overflow-hidden rounded-2xl border border-slate-200 bg-white text-left transition duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_16px_45px_rgba(15,23,42,0.09)] sm:grid-cols-[105px_minmax(0,1fr)]"
+                                style="border-left: 7px solid {{ $eventColour }};"
+                                data-title="{{ $calendarEvent['title'] }}"
+                                data-date="{{ $eventDetails['dateLabel'] ?? $eventStart->format('j F Y') }}"
+                                data-time="{{ $eventTime }}"
+                                data-location="{{ $eventLocation }}"
+                                data-description="{{ $eventDetails['description'] ?? '' }}"
+                                data-image="{{ $eventDetails['imageUrl'] ?? '' }}"
+                                data-url="{{ $eventDetails['externalUrl'] ?? '' }}"
+                                data-colour="{{ $eventColour }}"
+                                data-category="{{ $eventDetails['categoryLabel'] ?? 'Event' }}"
+                            >
+                                {{-- Date --}}
+                                <span class="flex min-h-[130px] flex-col items-center justify-center border-r border-slate-200 px-3 text-center">
+                                    <span class="text-3xl font-extrabold leading-none text-[rgb(var(--brand))] sm:text-4xl">
+                                        {{ $eventStart->format('d') }}
+                                    </span>
+
+                                    <span class="mt-2 text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">
+                                        {{ $eventStart->format('M') }}
+                                    </span>
+                                </span>
+
+                                {{-- Event details --}}
+                                <span class="flex min-w-0 flex-col justify-center px-4 py-5 sm:px-6">
+                                    <span class="text-lg font-extrabold leading-snug text-slate-950 transition group-hover:text-[rgb(var(--brand))] sm:text-xl">
+                                        {{ $calendarEvent['title'] }}
+                                    </span>
+
+                                    <span class="mt-3 text-sm font-extrabold text-[rgb(var(--brand))]">
+                                        {{ $eventStart->format('l, j F Y') }}
+                                    </span>
+
+                                    <span class="mt-1 text-sm font-bold text-slate-700">
+                                        {{ $eventTime }}
+                                    </span>
+
+                                    @if(filled($eventLocation))
+                                        <span class="mt-2 line-clamp-1 text-sm font-semibold text-slate-500">
+                                            {{ $eventLocation }}
+                                        </span>
+                                    @endif
+                                </span>
+                            </button>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-8 text-slate-600">
+                        No church calendar events are currently scheduled.
+                    </div>
                 @endif
 
-                @if($location)
-                  <div class="flex items-center gap-2">
-                    <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100">📍</span>
-                    <span class="font-semibold">{{ \Illuminate\Support\Str::limit($location, 48) }}</span>
-                  </div>
-                @endif
-              </div>
-
-              <div class="mt-6 inline-flex items-center gap-2 font-extrabold text-[rgb(var(--brand))]">
-                View details <span class="transition group-hover:translate-x-1">→</span>
-              </div>
+                <a
+                    href="{{ route('calendar.index') }}"
+                    class="mt-5 inline-flex items-center gap-2 text-sm font-extrabold text-[rgb(var(--brand))] sm:hidden"
+                >
+                    View the full calendar
+                    <span aria-hidden="true">→</span>
+                </a>
             </div>
 
-          </a>
-        @endforeach
-      </div>
-    @else
-      <div class="mt-10 rounded-3xl border border-slate-200 bg-slate-50 p-10 text-slate-700">
-        No upcoming events available right now.
-      </div>
-    @endif
+            {{-- Eventib events --}}
+            <div>
+                <div class="mb-5">
+                    <h3 class="text-xl font-extrabold text-slate-950">
+                        Special conferences & events
+                    </h3>
+                </div>
 
-  </div>
+                @if(is_array($events) && count($events))
+                    <div class="space-y-5">
+                        @foreach(array_slice($events, 0, 3) as $e)
+                            @php
+                                $title = (string) data_get(
+                                    $e,
+                                    'title',
+                                    'Event'
+                                );
+
+                                $nextSessionDate = data_get(
+                                    $e,
+                                    'next_session.date'
+                                );
+
+                                $nextSessionName = (string) data_get(
+                                    $e,
+                                    'next_session.name',
+                                    ''
+                                );
+
+                                $banner = $makeBannerUrl(
+                                    data_get($e, 'banner')
+                                );
+
+                                $location = (string) data_get(
+                                    $e,
+                                    'location',
+                                    ''
+                                );
+
+                                $url = data_get($e, 'url')
+                                    ?: (
+                                        $eventibBase
+                                        . '/events/'
+                                        . (string) data_get($e, 'id')
+                                    );
+
+                                $dt = $nextSessionDate
+                                    ? Carbon::parse($nextSessionDate)
+                                    : null;
+                            @endphp
+
+                            <a
+                                href="{{ $url }}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="group block overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_70px_rgba(15,23,42,0.14)]"
+                            >
+                                {{-- Image --}}
+                                <div class="relative h-[210px] overflow-hidden bg-slate-900">
+                                    @if($banner)
+                                        <img
+                                            src="{{ $banner }}"
+                                            alt="{{ $title }}"
+                                            loading="lazy"
+                                            class="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                                        >
+                                    @else
+                                        <div class="absolute inset-0 bg-gradient-to-br from-[rgb(var(--brand))] via-blue-900 to-violet-950"></div>
+
+                                        <div class="absolute inset-0 flex items-center justify-center px-8 text-center">
+                                            <div>
+                                                <div class="text-xs font-extrabold uppercase tracking-[0.2em] text-white/70">
+                                                    Fresh Fountain
+                                                </div>
+
+                                                <div class="mt-3 text-2xl font-extrabold leading-tight text-white">
+                                                    {{ \Illuminate\Support\Str::limit($title, 46) }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
+
+                                    <div class="absolute left-4 top-4">
+                                        <span class="inline-flex rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-wide text-slate-900 shadow">
+                                            Tickets / Registration
+                                        </span>
+                                    </div>
+
+                                    @if($dt)
+                                        <div class="absolute right-4 top-4 flex h-[66px] w-[66px] flex-col items-center justify-center rounded-full border border-white/50 bg-white text-center shadow-xl">
+                                            <span class="text-[10px] font-extrabold uppercase text-slate-500">
+                                                {{ $dt->format('D') }}
+                                            </span>
+
+                                            <span class="text-xl font-extrabold leading-none text-slate-950">
+                                                {{ $dt->format('d') }}
+                                            </span>
+
+                                            <span class="text-[10px] font-extrabold uppercase text-slate-500">
+                                                {{ $dt->format('M') }}
+                                            </span>
+                                        </div>
+                                    @endif
+
+                                    @if(filled($nextSessionName))
+                                        <div class="absolute bottom-4 left-4 right-4 text-sm font-extrabold uppercase tracking-wide text-white drop-shadow">
+                                            {{ \Illuminate\Support\Str::limit($nextSessionName, 42) }}
+                                        </div>
+                                    @endif
+                                </div>
+
+                                {{-- Eventib body --}}
+                                <div class="p-6">
+                                    <h4 class="text-lg font-extrabold leading-snug text-slate-950">
+                                        {{ $title }}
+                                    </h4>
+
+                                    <div class="mt-4 space-y-3">
+                                        @if($dt)
+                                            <div class="flex items-start gap-3 text-sm">
+                                                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-base">
+                                                    🗓️
+                                                </span>
+
+                                                <span class="pt-2 font-bold text-slate-600">
+                                                    {{ $dt->format('jS F Y') }}
+                                                </span>
+                                            </div>
+                                        @endif
+
+                                        @if(filled($location))
+                                            <div class="flex items-start gap-3 text-sm">
+                                                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-base">
+                                                    📍
+                                                </span>
+
+                                                <span class="line-clamp-2 pt-2 font-bold text-slate-600">
+                                                    {{ $location }}
+                                                </span>
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <div class="mt-6 inline-flex items-center gap-2 font-extrabold text-[rgb(var(--brand))]">
+                                        View details
+
+                                        <span class="transition group-hover:translate-x-1">
+                                            →
+                                        </span>
+                                    </div>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-8 text-slate-600">
+                        No featured or ticketed events are available right now.
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
 </section>
+
+<div
+    id="homepage-calendar-modal"
+    class="fixed inset-0 z-[120] hidden items-center justify-center p-4"
+    aria-hidden="true"
+>
+    <button
+        type="button"
+        id="homepage-calendar-backdrop"
+        class="absolute inset-0 bg-slate-950/75 backdrop-blur-sm"
+        aria-label="Close event details"
+    ></button>
+
+    <div
+        class="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="homepage-calendar-title"
+    >
+        <div
+            id="homepage-calendar-colour"
+            class="h-3 w-full bg-blue-700"
+        ></div>
+
+        <div
+            id="homepage-calendar-image-wrapper"
+            class="hidden"
+        >
+            <img
+                id="homepage-calendar-image"
+                src=""
+                alt=""
+                class="h-56 w-full object-cover md:h-72"
+            >
+        </div>
+
+        <div class="p-6 md:p-9">
+            <div class="flex items-start justify-between gap-5">
+                <div>
+                    <span
+                        id="homepage-calendar-category"
+                        class="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-blue-700"
+                    ></span>
+
+                    <h2
+                        id="homepage-calendar-title"
+                        class="mt-4 text-3xl font-extrabold leading-tight text-slate-950"
+                    ></h2>
+                </div>
+
+                <button
+                    type="button"
+                    id="homepage-calendar-close"
+                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-100 text-2xl text-slate-600 transition hover:bg-slate-200 hover:text-slate-950"
+                    aria-label="Close event details"
+                >
+                    &times;
+                </button>
+            </div>
+
+            <div class="mt-7 grid gap-4 sm:grid-cols-2">
+                <div class="rounded-2xl bg-slate-50 p-4">
+                    <p class="text-xs font-extrabold uppercase tracking-wide text-slate-500">
+                        Date
+                    </p>
+
+                    <p
+                        id="homepage-calendar-date"
+                        class="mt-1 font-bold text-slate-900"
+                    ></p>
+                </div>
+
+                <div class="rounded-2xl bg-slate-50 p-4">
+                    <p class="text-xs font-extrabold uppercase tracking-wide text-slate-500">
+                        Time
+                    </p>
+
+                    <p
+                        id="homepage-calendar-time"
+                        class="mt-1 font-bold text-slate-900"
+                    ></p>
+                </div>
+            </div>
+
+            <div
+                id="homepage-calendar-location-wrapper"
+                class="mt-4 hidden rounded-2xl bg-slate-50 p-4"
+            >
+                <p class="text-xs font-extrabold uppercase tracking-wide text-slate-500">
+                    Location
+                </p>
+
+                <p
+                    id="homepage-calendar-location"
+                    class="mt-1 font-bold text-slate-900"
+                ></p>
+            </div>
+
+            <div
+                id="homepage-calendar-description-wrapper"
+                class="mt-7 hidden"
+            >
+                <h3 class="text-sm font-extrabold uppercase tracking-wide text-slate-500">
+                    About this event
+                </h3>
+
+                <p
+                    id="homepage-calendar-description"
+                    class="mt-3 whitespace-pre-line leading-7 text-slate-700"
+                ></p>
+            </div>
+
+            <div class="mt-8 flex flex-wrap gap-3 border-t border-slate-200 pt-6">
+                <a
+                    href="{{ route('calendar.index') }}"
+                    class="inline-flex items-center justify-center rounded-2xl bg-[rgb(var(--brand))] px-6 py-3 font-extrabold text-white transition hover:bg-[rgb(var(--brand-dark))]"
+                >
+                    Open full calendar
+                </a>
+
+                <a
+                    id="homepage-calendar-external-link"
+                    href="#"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="hidden items-center justify-center rounded-2xl border border-slate-300 bg-white px-6 py-3 font-extrabold text-slate-800 transition hover:border-blue-500 hover:text-blue-700"
+                >
+                    More information
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const eventButtons = document.querySelectorAll(
+            '.homepage-calendar-event'
+        );
+
+        const modal = document.getElementById(
+            'homepage-calendar-modal'
+        );
+
+        if (!modal || eventButtons.length === 0) {
+            return;
+        }
+
+        const backdrop = document.getElementById(
+            'homepage-calendar-backdrop'
+        );
+
+        const closeButton = document.getElementById(
+            'homepage-calendar-close'
+        );
+
+        const colour = document.getElementById(
+            'homepage-calendar-colour'
+        );
+
+        const category = document.getElementById(
+            'homepage-calendar-category'
+        );
+
+        const title = document.getElementById(
+            'homepage-calendar-title'
+        );
+
+        const date = document.getElementById(
+            'homepage-calendar-date'
+        );
+
+        const time = document.getElementById(
+            'homepage-calendar-time'
+        );
+
+        const locationWrapper = document.getElementById(
+            'homepage-calendar-location-wrapper'
+        );
+
+        const location = document.getElementById(
+            'homepage-calendar-location'
+        );
+
+        const descriptionWrapper = document.getElementById(
+            'homepage-calendar-description-wrapper'
+        );
+
+        const description = document.getElementById(
+            'homepage-calendar-description'
+        );
+
+        const imageWrapper = document.getElementById(
+            'homepage-calendar-image-wrapper'
+        );
+
+        const image = document.getElementById(
+            'homepage-calendar-image'
+        );
+
+        const externalLink = document.getElementById(
+            'homepage-calendar-external-link'
+        );
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.setAttribute('aria-hidden', 'true');
+
+            document.body.classList.remove(
+                'overflow-hidden'
+            );
+        }
+
+        function openModal(button) {
+            const eventTitle =
+                button.dataset.title || 'Calendar event';
+
+            const eventColour =
+                button.dataset.colour || '#1d4ed8';
+
+            title.textContent = eventTitle;
+            date.textContent = button.dataset.date || '';
+            time.textContent = button.dataset.time || '';
+            category.textContent =
+                button.dataset.category || 'Event';
+
+            colour.style.backgroundColor = eventColour;
+
+            if (button.dataset.location) {
+                location.textContent =
+                    button.dataset.location;
+
+                locationWrapper.classList.remove(
+                    'hidden'
+                );
+            } else {
+                location.textContent = '';
+
+                locationWrapper.classList.add(
+                    'hidden'
+                );
+            }
+
+            if (button.dataset.description) {
+                description.textContent =
+                    button.dataset.description;
+
+                descriptionWrapper.classList.remove(
+                    'hidden'
+                );
+            } else {
+                description.textContent = '';
+
+                descriptionWrapper.classList.add(
+                    'hidden'
+                );
+            }
+
+            if (button.dataset.image) {
+                image.src = button.dataset.image;
+                image.alt = eventTitle;
+
+                imageWrapper.classList.remove(
+                    'hidden'
+                );
+            } else {
+                image.removeAttribute('src');
+                image.alt = '';
+
+                imageWrapper.classList.add(
+                    'hidden'
+                );
+            }
+
+            if (button.dataset.url) {
+                externalLink.href = button.dataset.url;
+
+                externalLink.classList.remove(
+                    'hidden'
+                );
+
+                externalLink.classList.add(
+                    'inline-flex'
+                );
+            } else {
+                externalLink.href = '#';
+
+                externalLink.classList.add(
+                    'hidden'
+                );
+
+                externalLink.classList.remove(
+                    'inline-flex'
+                );
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modal.setAttribute('aria-hidden', 'false');
+
+            document.body.classList.add(
+                'overflow-hidden'
+            );
+
+            closeButton.focus();
+        }
+
+        eventButtons.forEach(function (button) {
+            button.addEventListener(
+                'click',
+                function () {
+                    openModal(button);
+                }
+            );
+        });
+
+        closeButton.addEventListener(
+            'click',
+            closeModal
+        );
+
+        backdrop.addEventListener(
+            'click',
+            closeModal
+        );
+
+        document.addEventListener(
+            'keydown',
+            function (event) {
+                if (event.key === 'Escape') {
+                    closeModal();
+                }
+            }
+        );
+    });
+</script>
 
 <!--
 {{-- =========================================================
