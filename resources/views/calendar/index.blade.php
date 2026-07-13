@@ -528,14 +528,13 @@
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,listMonth'
+                    right: 'dayGridMonth,listMonth'
                 },
 
                 buttonText: {
                     today: 'Today',
                     month: 'Month',
-                    week: 'Week',
-                    list: 'List'
+                    list: 'List View'
                 },
 
                 eventTimeFormat: {
@@ -819,45 +818,11 @@
                             domNodes: [wrapper]
                         };
                     }
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Week view
-                    |--------------------------------------------------------------------------
-                    */
-
-                    const wrapper =
-                        document.createElement('div');
-
-                    wrapper.className =
-                        'ffc-week-event-content';
-
-                    const title =
-                        document.createElement('strong');
-
-                    title.textContent =
-                        info.event.title;
-
-                    wrapper.appendChild(title);
-
-                    if (details.location) {
-                        const location =
-                            document.createElement(
-                                'small'
-                            );
-
-                        location.textContent =
-                            details.location;
-
-                        wrapper.appendChild(location);
-                    }
-
-                    return {
-                        domNodes: [wrapper]
-                    };
                 }
             }
         );
+
+        calendar.render();
 
         calendar.render();
 
@@ -1011,12 +976,11 @@
 
     /*
     |--------------------------------------------------------------------------
-    | Month, Week and List navigation
+    | Month and List navigation
     |--------------------------------------------------------------------------
     */
 
     #church-calendar .fc-dayGridMonth-button,
-    #church-calendar .fc-timeGridWeek-button,
     #church-calendar .fc-listMonth-button {
         position: relative;
         margin: 0 0.75rem !important;
@@ -1033,21 +997,18 @@
     }
 
     #church-calendar .fc-dayGridMonth-button:hover,
-    #church-calendar .fc-timeGridWeek-button:hover,
     #church-calendar .fc-listMonth-button:hover {
         background: transparent !important;
         color: #0756b9 !important;
     }
 
     #church-calendar .fc-dayGridMonth-button.fc-button-active,
-    #church-calendar .fc-timeGridWeek-button.fc-button-active,
     #church-calendar .fc-listMonth-button.fc-button-active {
         background: transparent !important;
         color: #0756b9 !important;
     }
 
     #church-calendar .fc-dayGridMonth-button::after,
-    #church-calendar .fc-timeGridWeek-button::after,
     #church-calendar .fc-listMonth-button::after {
         position: absolute;
         right: 0;
@@ -1062,8 +1023,6 @@
 
     #church-calendar
         .fc-dayGridMonth-button.fc-button-active::after,
-    #church-calendar
-        .fc-timeGridWeek-button.fc-button-active::after,
     #church-calendar
         .fc-listMonth-button.fc-button-active::after {
         background: #0756b9;
@@ -1312,23 +1271,6 @@
 
     /*
     |--------------------------------------------------------------------------
-    | Week view
-    |--------------------------------------------------------------------------
-    */
-
-    #church-calendar .ffc-week-event-content {
-        display: flex;
-        flex-direction: column;
-        gap: 0.15rem;
-        white-space: normal;
-    }
-
-    #church-calendar .ffc-week-event-content small {
-        opacity: 0.85;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
     | Mobile
     |--------------------------------------------------------------------------
     */
@@ -1364,7 +1306,6 @@
         }
 
         #church-calendar .fc-dayGridMonth-button,
-        #church-calendar .fc-timeGridWeek-button,
         #church-calendar .fc-listMonth-button {
             margin: 0 0.65rem !important;
             font-size: 0.95rem;
