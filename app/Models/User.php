@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -50,6 +51,40 @@ class User extends Authenticatable
     public function canAccessPanel(\Filament\Panel $panel): bool
     {
         return $this->hasRole('admin');
+    }
+
+    public function courseEnrollments(): HasMany
+    {
+        return $this->hasMany(
+            CourseEnrollment::class
+        );
+    }
+
+    public function lessonCompletions(): HasMany
+    {
+        return $this->hasMany(
+            LessonCompletion::class
+        );
+    }
+
+    public function quizAttempts(): HasMany
+    {
+        return $this->hasMany(
+            QuizAttempt::class
+        );
+    }
+
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
+    public function issuedCertificates(): HasMany
+    {
+        return $this->hasMany(
+            Certificate::class,
+            'issued_by'
+        );
     }
 
 }
