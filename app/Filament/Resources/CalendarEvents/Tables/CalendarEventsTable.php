@@ -44,10 +44,6 @@ class CalendarEventsTable
 
                 TextColumn::make('title')
                     ->label('Event')
-                    ->description(
-                        fn (CalendarEvent $record): ?string =>
-                            $record->location
-                    )
                     ->searchable()
                     ->sortable()
                     ->weight('bold')
