@@ -34,10 +34,6 @@ class CoursesTable
 
                 TextColumn::make('title')
                     ->label('Course')
-                    ->description(
-                        fn (Course $record): ?string =>
-                            $record->short_description
-                    )
                     ->searchable()
                     ->sortable()
                     ->weight('bold')
