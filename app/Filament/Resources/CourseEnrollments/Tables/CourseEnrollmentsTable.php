@@ -7,6 +7,7 @@ use App\Models\CourseEnrollment;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -14,7 +15,6 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Filament\Forms\Components\Textarea;
 
 class CourseEnrollmentsTable
 {
@@ -172,9 +172,11 @@ class CourseEnrollmentsTable
                 SelectFilter::make('course_id')
                     ->label('Course')
                     ->options(
-                        Course::query()
-                            ->orderBy('title')
-                            ->pluck('title', 'id')
+                        fn (): array =>
+                            Course::query()
+                                ->orderBy('title')
+                                ->pluck('title', 'id')
+                                ->all()
                     )
                     ->searchable()
                     ->preload()
@@ -187,17 +189,57 @@ class CourseEnrollmentsTable
                     )
                     ->native(false),
 
+                Filter::make('active_today')
+                    ->label('Active today')
+                    ->query(
+                        fn (Builder $query): Builder =>
+                            $query->whereDate(
+                                'last_activity_at',
+                                today()
+                            )
+                    ),
+
+                Filter::make('has_quiz_attempts')
+                    ->label('Has quiz attempts')
+                    ->query(
+                        fn (Builder $query): Builder =>
+                            $query->whereHas(
+                                'quizAttempts'
+                            )
+                    ),
+
+                Filter::make('has_failed_quiz_attempts')
+                    ->label('Has failed quiz attempts')
+                    ->query(
+                        fn (Builder $query): Builder =>
+                            $query->whereHas(
+                                'quizAttempts',
+                                fn (
+                                    Builder $attempts
+                                ): Builder =>
+                                    $attempts->where(
+                                        'passed',
+                                        false
+                                    )
+                            )
+                    ),
+
                 Filter::make('inactive_7_days')
                     ->label(
                         'Inactive for 7+ days'
                     )
                     ->query(
                         fn (Builder $query): Builder =>
-                            $query->where(
-                                'last_activity_at',
-                                '<=',
-                                now()->subDays(7)
-                            )
+                            $query
+                                ->where(
+                                    'status',
+                                    CourseEnrollment::STATUS_ACTIVE
+                                )
+                                ->where(
+                                    'last_activity_at',
+                                    '<=',
+                                    now()->subDays(7)
+                                )
                     ),
 
                 Filter::make('inactive_14_days')
@@ -206,11 +248,16 @@ class CourseEnrollmentsTable
                     )
                     ->query(
                         fn (Builder $query): Builder =>
-                            $query->where(
-                                'last_activity_at',
-                                '<=',
-                                now()->subDays(14)
-                            )
+                            $query
+                                ->where(
+                                    'status',
+                                    CourseEnrollment::STATUS_ACTIVE
+                                )
+                                ->where(
+                                    'last_activity_at',
+                                    '<=',
+                                    now()->subDays(14)
+                                )
                     ),
 
                 Filter::make('not_started')
@@ -225,6 +272,27 @@ class CourseEnrollmentsTable
                                 )
                     ),
 
+                Filter::make('in_progress')
+                    ->label('In progress')
+                    ->query(
+                        fn (Builder $query): Builder =>
+                            $query
+                                ->where(
+                                    'status',
+                                    CourseEnrollment::STATUS_ACTIVE
+                                )
+                                ->where(
+                                    'progress_percentage',
+                                    '>',
+                                    0
+                                )
+                                ->where(
+                                    'progress_percentage',
+                                    '<',
+                                    100
+                                )
+                    ),
+
                 Filter::make('completed')
                     ->label('Completed courses')
                     ->query(
@@ -235,6 +303,7 @@ class CourseEnrollmentsTable
                             )
                     ),
             ])
+            ->filtersFormColumns(2)
             ->recordActions([
                 ViewAction::make()
                     ->label('View Progress'),
