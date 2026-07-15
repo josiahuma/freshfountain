@@ -654,8 +654,31 @@ class MigrateLegacyLmsProgress extends Command
             $counterKey =
                 "{$newUserId}:{$newQuizId}";
 
-            $attemptCounters[$counterKey] =
-                ($attemptCounters[$counterKey] ?? 0) + 1;
+            /*
+            * Existing learners may already have attempts in the
+            * new LMS. Begin imported historical numbering after
+            * their current highest attempt number.
+            */
+            if (! array_key_exists(
+                $counterKey,
+                $attemptCounters
+            )) {
+                $attemptCounters[$counterKey] =
+                    $newUserId > 0
+                        ? (int) DB::table('quiz_attempts')
+                            ->where(
+                                'user_id',
+                                $newUserId
+                            )
+                            ->where(
+                                'quiz_id',
+                                $newQuizId
+                            )
+                            ->max('attempt_number')
+                        : 0;
+            }
+
+            $attemptCounters[$counterKey]++;
 
             if ($this->dryRun) {
                 $this->stats[
