@@ -12,26 +12,19 @@ class UnitMembershipRequest extends Model
 {
     use HasFactory;
 
-    public const STATUS_PENDING =
-        'pending';
+    public const STATUS_PENDING = 'pending';
 
-    public const STATUS_ASSIGNED =
-        'assigned';
+    public const STATUS_ASSIGNED = 'assigned';
 
-    public const STATUS_CONTACTED =
-        'contacted';
+    public const STATUS_CONTACTED = 'contacted';
 
-    public const STATUS_APPROVED =
-        'approved';
+    public const STATUS_APPROVED = 'approved';
 
-    public const STATUS_DECLINED =
-        'declined';
+    public const STATUS_DECLINED = 'declined';
 
-    public const STATUS_WITHDRAWN =
-        'withdrawn';
+    public const STATUS_WITHDRAWN = 'withdrawn';
 
-    public const STATUS_COMPLETED =
-        'completed';
+    public const STATUS_COMPLETED = 'completed';
 
     protected $fillable = [
         'member_id',
@@ -84,6 +77,27 @@ class UnitMembershipRequest extends Model
 
                 $request->submitted_at ??=
                     now();
+
+                $request->status ??=
+                    self::STATUS_PENDING;
+            }
+        );
+
+        static::saving(
+            function (
+                UnitMembershipRequest $request
+            ): void {
+                $request->first_name = filled(
+                    $request->first_name
+                )
+                    ? trim($request->first_name)
+                    : null;
+
+                $request->last_name = filled(
+                    $request->last_name
+                )
+                    ? trim($request->last_name)
+                    : null;
 
                 $request->email = filled(
                     $request->email
@@ -147,6 +161,33 @@ class UnitMembershipRequest extends Model
         );
     }
 
+    public function scopeActionable(
+        Builder $query
+    ): Builder {
+        return $query->whereIn(
+            'status',
+            [
+                self::STATUS_PENDING,
+                self::STATUS_ASSIGNED,
+                self::STATUS_CONTACTED,
+                self::STATUS_APPROVED,
+            ]
+        );
+    }
+
+    public function scopeClosed(
+        Builder $query
+    ): Builder {
+        return $query->whereIn(
+            'status',
+            [
+                self::STATUS_DECLINED,
+                self::STATUS_WITHDRAWN,
+                self::STATUS_COMPLETED,
+            ]
+        );
+    }
+
     public function getDisplayNameAttribute(): string
     {
         return collect([
@@ -155,6 +196,79 @@ class UnitMembershipRequest extends Model
         ])
             ->filter()
             ->implode(' ');
+    }
+
+    public function canAssignLeader(): bool
+    {
+        return $this->status === self::STATUS_PENDING
+            && blank($this->assigned_leader_id);
+    }
+
+    public function canMarkContacted(): bool
+    {
+        return $this->status === self::STATUS_ASSIGNED
+            && filled($this->assigned_leader_id);
+    }
+
+    public function canApprove(): bool
+    {
+        return in_array(
+            $this->status,
+            [
+                self::STATUS_ASSIGNED,
+                self::STATUS_CONTACTED,
+            ],
+            true
+        );
+    }
+
+    public function canComplete(): bool
+    {
+        return $this->status === self::STATUS_APPROVED;
+    }
+
+    public function canDecline(): bool
+    {
+        return in_array(
+            $this->status,
+            [
+                self::STATUS_PENDING,
+                self::STATUS_ASSIGNED,
+                self::STATUS_CONTACTED,
+            ],
+            true
+        );
+    }
+
+    public function canEdit(): bool
+    {
+        return in_array(
+            $this->status,
+            [
+                self::STATUS_PENDING,
+                self::STATUS_ASSIGNED,
+                self::STATUS_CONTACTED,
+            ],
+            true
+        );
+    }
+
+    public function isTerminal(): bool
+    {
+        return in_array(
+            $this->status,
+            [
+                self::STATUS_DECLINED,
+                self::STATUS_WITHDRAWN,
+                self::STATUS_COMPLETED,
+            ],
+            true
+        );
+    }
+
+    public function isClosed(): bool
+    {
+        return $this->isTerminal();
     }
 
     public static function statusOptions(): array
@@ -181,6 +295,34 @@ class UnitMembershipRequest extends Model
             self::STATUS_COMPLETED =>
                 'Completed',
         ];
+    }
+
+    public static function statusColor(
+        ?string $status
+    ): string {
+        return match ($status) {
+            self::STATUS_PENDING =>
+                'warning',
+
+            self::STATUS_ASSIGNED =>
+                'info',
+
+            self::STATUS_CONTACTED =>
+                'primary',
+
+            self::STATUS_APPROVED,
+            self::STATUS_COMPLETED =>
+                'success',
+
+            self::STATUS_DECLINED =>
+                'danger',
+
+            self::STATUS_WITHDRAWN =>
+                'gray',
+
+            default =>
+                'gray',
+        };
     }
 
     private static function generateReference(): string

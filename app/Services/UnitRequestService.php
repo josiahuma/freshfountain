@@ -6,131 +6,161 @@ use App\Models\ChurchUnit;
 use App\Models\Leader;
 use App\Models\Member;
 use App\Models\UnitMembershipRequest;
+use App\Services\Notifications\UnitMembershipNotificationService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class UnitRequestService
 {
+    public function __construct(
+        private readonly UnitMembershipNotificationService $notifications
+    ) {
+    }
+
     public function submit(
         ChurchUnit $churchUnit,
         array $data
     ): UnitMembershipRequest {
-        return DB::transaction(
-            function () use (
-                $churchUnit,
-                $data
-            ): UnitMembershipRequest {
-                $email = $this->normaliseEmail(
-                    $data['email'] ?? null
-                );
-
-                $mobile = $this->cleanPhone(
-                    $data['mobile_number'] ?? null
-                );
-
-                $member = $this->findMember(
-                    $email,
-                    $mobile
-                );
-
-                if (! $member) {
-                    $member = $this->createVisitor(
-                        $data,
-                        $email,
-                        $mobile
-                    );
-                }
-
-                $this->ensureNotAlreadyMember(
-                    $member,
-                    $churchUnit
-                );
-
-                $this->ensureNoOpenRequest(
-                    $member,
+        $membershipRequest =
+            DB::transaction(
+                function () use (
                     $churchUnit,
-                    $email,
-                    $mobile
-                );
+                    $data
+                ): UnitMembershipRequest {
+                    $email =
+                        $this->normaliseEmail(
+                            $data['email']
+                            ?? null
+                        );
 
-                $assignedLeader =
-                    $this->randomActiveLeader(
+                    $mobile =
+                        $this->normalisePhone(
+                            $data['mobile_number']
+                            ?? null
+                        );
+
+                    $phoneComparison =
+                        $this->phoneComparisonValue(
+                            $mobile
+                        );
+
+                    $member =
+                        $this->findMember(
+                            $email,
+                            $phoneComparison
+                        );
+
+                    if (! $member) {
+                        $member =
+                            $this->createVisitor(
+                                $data,
+                                $email,
+                                $mobile
+                            );
+                    }
+
+                    $this->ensureNotAlreadyMember(
+                        $member,
                         $churchUnit
                     );
 
-                return UnitMembershipRequest::query()
-                    ->create([
-                        'member_id' =>
-                            $member->id,
+                    $this->ensureNoOpenRequest(
+                        $member,
+                        $churchUnit,
+                        $email,
+                        $phoneComparison
+                    );
 
-                        'church_unit_id' =>
-                            $churchUnit->id,
+                    $assignedLeader =
+                        $this->randomActiveLeader(
+                            $churchUnit
+                        );
 
-                        'assigned_leader_id' =>
-                            $assignedLeader?->id,
+                    return UnitMembershipRequest::query()
+                        ->create([
+                            'member_id' =>
+                                $member->id,
 
-                        'first_name' =>
-                            trim(
-                                (string)
-                                $data['first_name']
-                            ),
+                            'church_unit_id' =>
+                                $churchUnit->id,
 
-                        'last_name' =>
-                            filled(
-                                $data['last_name']
-                                ?? null
-                            )
-                                ? trim(
-                                    (string)
+                            'assigned_leader_id' =>
+                                $assignedLeader?->id,
+
+                            'first_name' =>
+                                $this->cleanName(
+                                    $data['first_name']
+                                    ?? null
+                                ),
+
+                            'last_name' =>
+                                $this->cleanName(
                                     $data['last_name']
-                                )
-                                : null,
+                                    ?? null
+                                ),
 
-                        'email' => $email,
+                            'email' =>
+                                $email,
 
-                        'mobile_number' =>
-                            $mobile,
+                            'mobile_number' =>
+                                $mobile,
 
-                        'message' =>
-                            filled(
-                                $data['message']
-                                ?? null
-                            )
-                                ? trim(
-                                    (string)
+                            'message' =>
+                                filled(
                                     $data['message']
+                                    ?? null
                                 )
-                                : null,
+                                    ? trim(
+                                        (string)
+                                        $data['message']
+                                    )
+                                    : null,
 
-                        'status' =>
-                            $assignedLeader
-                                ? UnitMembershipRequest::STATUS_ASSIGNED
-                                : UnitMembershipRequest::STATUS_PENDING,
+                            'status' =>
+                                $assignedLeader
+                                    ? UnitMembershipRequest::STATUS_ASSIGNED
+                                    : UnitMembershipRequest::STATUS_PENDING,
 
-                        'assigned_at' =>
-                            $assignedLeader
-                                ? now()
-                                : null,
+                            'assigned_at' =>
+                                $assignedLeader
+                                    ? now()
+                                    : null,
 
-                        'submitted_at' =>
-                            now(),
+                            'submitted_at' =>
+                                now(),
 
-                        'source' =>
-                            'website',
-                    ]);
-            }
-        );
+                            'source' =>
+                                'website',
+                        ]);
+                },
+                3
+            );
+
+        $membershipRequest->load([
+            'churchUnit',
+            'assignedLeader',
+            'member',
+        ]);
+
+        $this->notifications
+            ->requestSubmitted(
+                $membershipRequest
+            );
+
+        return $membershipRequest;
     }
 
     private function findMember(
         ?string $email,
-        ?string $mobile
+        string $phoneComparison
     ): ?Member {
         if (filled($email)) {
             $member = Member::query()
+                ->whereNotNull('email')
                 ->whereRaw(
-                    'LOWER(email) = ?',
+                    'LOWER(TRIM(email)) = ?',
                     [$email]
                 )
                 ->first();
@@ -140,31 +170,24 @@ class UnitRequestService
             }
         }
 
-        if (filled($mobile)) {
-            $comparison =
-                $this->phoneComparisonValue(
-                    $mobile
-                );
-
-            if ($comparison !== '') {
-                return Member::query()
-                    ->whereNotNull(
-                        'mobile_number'
-                    )
-                    ->get()
-                    ->first(
-                        fn (
-                            Member $candidate
-                        ): bool =>
-                            $this->phoneComparisonValue(
-                                $candidate
-                                    ->mobile_number
-                            ) === $comparison
-                    );
-            }
+        if ($phoneComparison === '') {
+            return null;
         }
 
-        return null;
+        return Member::query()
+            ->whereNotNull(
+                'mobile_number'
+            )
+            ->get()
+            ->first(
+                fn (
+                    Member $candidate
+                ): bool =>
+                    $this->phoneComparisonValue(
+                        $candidate
+                            ->mobile_number
+                    ) === $phoneComparison
+            );
     }
 
     private function createVisitor(
@@ -172,25 +195,32 @@ class UnitRequestService
         ?string $email,
         ?string $mobile
     ): Member {
+        $existing = $this->findMember(
+            $email,
+            $this->phoneComparisonValue(
+                $mobile
+            )
+        );
+
+        if ($existing) {
+            return $existing;
+        }
+
         return Member::query()->create([
             'first_name' =>
-                trim(
-                    (string)
+                $this->cleanName(
                     $data['first_name']
+                    ?? null
                 ),
 
             'last_name' =>
-                filled(
+                $this->cleanName(
                     $data['last_name']
                     ?? null
-                )
-                    ? trim(
-                        (string)
-                        $data['last_name']
-                    )
-                    : null,
+                ),
 
-            'email' => $email,
+            'email' =>
+                $email,
 
             'mobile_number' =>
                 $mobile,
@@ -198,22 +228,23 @@ class UnitRequestService
             'membership_status' =>
                 Member::STATUS_VISITOR,
 
-            'is_active' => true,
+            'is_active' =>
+                true,
 
-            /*
-             * Consent must not be assumed merely
-             * because somebody submitted this form.
-             */
-            'email_consent' => false,
-            'sms_consent' => false,
-            'do_not_contact' => false,
+            'email_consent' =>
+                false,
 
-            /*
-             * The requested unit is not assigned here.
-             * Membership is created only after approval.
-             */
-            'church_unit_id' => null,
-            'leader_id' => null,
+            'sms_consent' =>
+                false,
+
+            'do_not_contact' =>
+                false,
+
+            'church_unit_id' =>
+                null,
+
+            'leader_id' =>
+                null,
 
             'notes' =>
                 'Created automatically from a public unit membership request.',
@@ -255,7 +286,7 @@ class UnitRequestService
         Member $member,
         ChurchUnit $churchUnit,
         ?string $email,
-        ?string $mobile
+        string $phoneComparison
     ): void {
         $openStatuses = [
             UnitMembershipRequest::STATUS_PENDING,
@@ -264,43 +295,87 @@ class UnitRequestService
             UnitMembershipRequest::STATUS_APPROVED,
         ];
 
-        $query = UnitMembershipRequest::query()
-            ->where(
-                'church_unit_id',
-                $churchUnit->id
-            )
-            ->whereIn(
-                'status',
-                $openStatuses
-            )
-            ->where(
-                function ($requestQuery) use (
+        $requests =
+            UnitMembershipRequest::query()
+                ->where(
+                    'church_unit_id',
+                    $churchUnit->id
+                )
+                ->whereIn(
+                    'status',
+                    $openStatuses
+                )
+                ->where(
+                    function (
+                        Builder $query
+                    ) use (
+                        $member,
+                        $email
+                    ): void {
+                        $query->where(
+                            'member_id',
+                            $member->id
+                        );
+
+                        if (filled($email)) {
+                            $query->orWhereRaw(
+                                'LOWER(TRIM(email)) = ?',
+                                [$email]
+                            );
+                        }
+                    }
+                )
+                ->get();
+
+        $duplicate =
+            $requests->contains(
+                function (
+                    UnitMembershipRequest $request
+                ) use (
                     $member,
                     $email,
-                    $mobile
-                ): void {
-                    $requestQuery->where(
-                        'member_id',
+                    $phoneComparison
+                ): bool {
+                    if (
+                        (int)
+                        $request->member_id
+                        ===
+                        (int)
                         $member->id
-                    );
-
-                    if (filled($email)) {
-                        $requestQuery->orWhereRaw(
-                            'LOWER(email) = ?',
-                            [$email]
-                        );
+                    ) {
+                        return true;
                     }
 
-                    if (filled($mobile)) {
-                        $requestQuery->orWhere(
-                            'mobile_number',
-                            $mobile
-                        );
+                    if (
+                        filled($email)
+                        && filled(
+                            $request->email
+                        )
+                        && $this->normaliseEmail(
+                            $request->email
+                        ) === $email
+                    ) {
+                        return true;
                     }
+
+                    if (
+                        $phoneComparison
+                        !== ''
+                        && $this
+                            ->phoneComparisonValue(
+                                $request
+                                    ->mobile_number
+                            )
+                        === $phoneComparison
+                    ) {
+                        return true;
+                    }
+
+                    return false;
                 }
             );
 
-        if (! $query->exists()) {
+        if (! $duplicate) {
             return;
         }
 
@@ -331,31 +406,70 @@ class UnitRequestService
         }
 
         return Str::lower(
-            trim((string) $value)
+            trim(
+                (string) $value
+            )
         );
     }
 
-    private function cleanPhone(
+    private function normalisePhone(
         mixed $value
     ): ?string {
         if (blank($value)) {
             return null;
         }
 
-        return preg_replace(
+        $phone = trim(
+            (string) $value
+        );
+
+        $phone = preg_replace(
             '/\s+/',
             ' ',
-            trim((string) $value)
+            $phone
         );
+
+        return filled($phone)
+            ? $phone
+            : null;
     }
 
     private function phoneComparisonValue(
         mixed $value
     ): string {
-        return preg_replace(
+        $digits = preg_replace(
             '/\D+/',
             '',
             (string) $value
         ) ?? '';
+
+        if (strlen($digits) >= 10) {
+            return substr(
+                $digits,
+                -10
+            );
+        }
+
+        return $digits;
+    }
+
+    private function cleanName(
+        mixed $value
+    ): ?string {
+        if (blank($value)) {
+            return null;
+        }
+
+        $name = preg_replace(
+            '/\s+/',
+            ' ',
+            trim(
+                (string) $value
+            )
+        );
+
+        return filled($name)
+            ? $name
+            : null;
     }
 }

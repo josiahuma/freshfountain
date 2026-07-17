@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\ChurchUnit;
 use App\Services\UnitRequestService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class UnitRequestController extends Controller
 {
-    public function create(string $slug)
-    {
+    public function create(
+        string $slug
+    ): View {
         $churchUnit = ChurchUnit::query()
             ->active()
             ->where('slug', $slug)
@@ -25,7 +28,7 @@ class UnitRequestController extends Controller
         Request $request,
         string $slug,
         UnitRequestService $service
-    ) {
+    ): RedirectResponse {
         $churchUnit = ChurchUnit::query()
             ->active()
             ->where('slug', $slug)
@@ -46,14 +49,17 @@ class UnitRequestController extends Controller
 
             'email' => [
                 'required',
-                'email',
+                'string',
+                'email:rfc',
                 'max:255',
             ],
 
             'mobile_number' => [
                 'required',
                 'string',
+                'min:7',
                 'max:30',
+                'regex:/^[0-9+\s().-]+$/',
             ],
 
             'message' => [
@@ -61,6 +67,9 @@ class UnitRequestController extends Controller
                 'string',
                 'max:2000',
             ],
+        ], [
+            'mobile_number.regex' =>
+                'Please enter a valid telephone number.',
         ]);
 
         $service->submit(
@@ -68,9 +77,10 @@ class UnitRequestController extends Controller
             $validated
         );
 
-        return redirect()->route(
-            'church-units.success',
-            $churchUnit->slug
+        return redirect()
+            ->route(
+                'church-units.success',
+                $churchUnit->slug
             )
             ->with(
                 'success',
@@ -78,8 +88,9 @@ class UnitRequestController extends Controller
             );
     }
 
-    public function success(string $slug)
-    {
+    public function success(
+        string $slug
+    ): View {
         $churchUnit = ChurchUnit::query()
             ->where('slug', $slug)
             ->firstOrFail();
