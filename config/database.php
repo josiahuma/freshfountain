@@ -130,6 +130,38 @@ return [
             'engine' => null,
         ],
 
+        'ovibase' => [
+            'driver' => 'mysql',
+            'host' => env(
+                'OVIBASE_DB_HOST',
+                '127.0.0.1'
+            ),
+            'port' => env(
+                'OVIBASE_DB_PORT',
+                '3306'
+            ),
+            'database' => env(
+                'OVIBASE_DB_DATABASE'
+            ),
+            'username' => env(
+                'OVIBASE_DB_USERNAME'
+            ),
+            'password' => env(
+                'OVIBASE_DB_PASSWORD'
+            ),
+            'unix_socket' => env(
+                'OVIBASE_DB_SOCKET',
+                ''
+            ),
+            'charset' => 'utf8mb4',
+            'collation' =>
+                'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+        ],
+
     ],
 
     /*

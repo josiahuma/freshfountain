@@ -12,6 +12,9 @@ use Carbon\CarbonImmutable;
 use App\Http\Controllers\Auth\MemberAuthController;
 use App\Http\Controllers\LearningController;
 use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\ChurchUnitController;
+use App\Http\Controllers\UnitRequestController;
+
 
 function pageViewFor(Page $page): string
 {
@@ -357,6 +360,39 @@ Route::middleware('auth')
             ]
         )->name('certificates.download');
     });
+
+
+/*|--------------------------------------------------------------------------
+| Church units
+|--------------------------------------------------------------------------
+| These routes are for the public-facing church unit pages.
+| They are separate from the admin panel routes.
+|*/
+
+Route::get(
+    '/church-units',
+    [ChurchUnitController::class, 'index']
+)->name('church-units.index');
+
+Route::get(
+    '/church-units/{slug}',
+    [ChurchUnitController::class, 'show']
+)->name('church-units.show');
+
+Route::get(
+    '/church-units/{slug}/join',
+    [UnitRequestController::class, 'create']
+)->name('church-units.join');
+
+Route::post(
+    '/church-units/{slug}/join',
+    [UnitRequestController::class, 'store']
+)->name('church-units.store');
+
+Route::get(
+    '/church-units/{slug}/success',
+    [UnitRequestController::class, 'success']
+)->name('church-units.success');
 
 /*
 |--------------------------------------------------------------------------
