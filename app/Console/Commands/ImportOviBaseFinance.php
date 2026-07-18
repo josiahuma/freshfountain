@@ -30,6 +30,9 @@ class ImportOviBaseFinance extends Command
 
     private bool $updateExisting = false;
 
+    /** @var array<string, string> */
+    private array $legacyTables = [];
+
     private array $stats = [
         'income_categories_found' => 0,
         'income_categories_created' => 0,
@@ -102,9 +105,8 @@ class ImportOviBaseFinance extends Command
     private function validateEnvironment(): bool
     {
         try {
-            $legacySchema = DB::connection(
-                'ovibase'
-            )->getSchemaBuilder();
+            $this->legacyTables =
+                $this->discoverLegacyTables();
 
             foreach (
                 [
@@ -113,11 +115,15 @@ class ImportOviBaseFinance extends Command
                     'donationfund',
                     'donation',
                     'finance',
-                ] as $table
+                ] as $logicalName
             ) {
-                if (! $legacySchema->hasTable($table)) {
+                if (! isset(
+                    $this->legacyTables[$logicalName]
+                )) {
                     $this->error(
-                        "The OviBase {$table} table was not found."
+                        'The OviBase '
+                        . $logicalName
+                        . ' table was not found.'
                     );
 
                     return false;
@@ -156,7 +162,7 @@ class ImportOviBaseFinance extends Command
     private function importIncomeCategories(): void
     {
         $records = DB::connection('ovibase')
-            ->table('incomecategory')
+            ->table($this->legacyTable('incomecategory'))
             ->where('tenantId', self::TENANT_ID)
             ->orderBy('createdAt')
             ->get();
@@ -232,7 +238,7 @@ class ImportOviBaseFinance extends Command
     private function importExpenseCategories(): void
     {
         $records = DB::connection('ovibase')
-            ->table('expensecategory')
+            ->table($this->legacyTable('expensecategory'))
             ->where('tenantId', self::TENANT_ID)
             ->orderBy('createdAt')
             ->get();
@@ -308,7 +314,7 @@ class ImportOviBaseFinance extends Command
     private function importDonationFunds(): void
     {
         $records = DB::connection('ovibase')
-            ->table('donationfund')
+            ->table($this->legacyTable('donationfund'))
             ->where('tenantId', self::TENANT_ID)
             ->orderBy('createdAt')
             ->get();
@@ -397,7 +403,7 @@ class ImportOviBaseFinance extends Command
     private function importDonations(): void
     {
         $records = DB::connection('ovibase')
-            ->table('donation')
+            ->table($this->legacyTable('donation'))
             ->where('tenantId', self::TENANT_ID)
             ->orderBy('createdAt')
             ->get();
@@ -520,25 +526,29 @@ class ImportOviBaseFinance extends Command
                     continue;
                 }
 
-                $this->stats['donations_created']++;
+                if ($this->dryRun) {
+                    $this->stats['donations_created']++;
 
-                if (! $this->dryRun) {
-                    $donation = Donation::query()
-                        ->create($payload);
-
-                    DB::table('donations')
-                        ->where('id', $donation->getKey())
-                        ->update([
-                            'created_at' =>
-                                $this->safeTimestamp(
-                                    $legacy->createdAt ?? null
-                                ) ?? now(),
-                            'updated_at' =>
-                                $this->safeTimestamp(
-                                    $legacy->createdAt ?? null
-                                ) ?? now(),
-                        ]);
+                    continue;
                 }
+
+                $donation = Donation::query()
+                    ->create($payload);
+
+                DB::table('donations')
+                    ->where('id', $donation->getKey())
+                    ->update([
+                        'created_at' =>
+                            $this->safeTimestamp(
+                                $legacy->createdAt ?? null
+                            ) ?? now(),
+                        'updated_at' =>
+                            $this->safeTimestamp(
+                                $legacy->createdAt ?? null
+                            ) ?? now(),
+                    ]);
+
+                $this->stats['donations_created']++;
             } catch (Throwable $exception) {
                 $this->stats['records_failed']++;
 
@@ -553,7 +563,7 @@ class ImportOviBaseFinance extends Command
     private function importFinanceTransactions(): void
     {
         $records = DB::connection('ovibase')
-            ->table('finance')
+            ->table($this->legacyTable('finance'))
             ->where('tenantId', self::TENANT_ID)
             ->orderBy('date')
             ->get();
@@ -682,31 +692,37 @@ class ImportOviBaseFinance extends Command
                     continue;
                 }
 
+                if ($this->dryRun) {
+                    $this->stats[
+                        'finance_transactions_created'
+                    ]++;
+
+                    continue;
+                }
+
+                $transaction =
+                    FinanceTransaction::query()
+                        ->create($payload);
+
+                DB::table('finance_transactions')
+                    ->where(
+                        'id',
+                        $transaction->getKey()
+                    )
+                    ->update([
+                        'created_at' =>
+                            $this->safeTimestamp(
+                                $legacy->createdAt ?? null
+                            ) ?? now(),
+                        'updated_at' =>
+                            $this->safeTimestamp(
+                                $legacy->updatedAt ?? null
+                            ) ?? now(),
+                    ]);
+
                 $this->stats[
                     'finance_transactions_created'
                 ]++;
-
-                if (! $this->dryRun) {
-                    $transaction =
-                        FinanceTransaction::query()
-                            ->create($payload);
-
-                    DB::table('finance_transactions')
-                        ->where(
-                            'id',
-                            $transaction->getKey()
-                        )
-                        ->update([
-                            'created_at' =>
-                                $this->safeTimestamp(
-                                    $legacy->createdAt ?? null
-                                ) ?? now(),
-                            'updated_at' =>
-                                $this->safeTimestamp(
-                                    $legacy->updatedAt ?? null
-                                ) ?? now(),
-                        ]);
-                }
             } catch (Throwable $exception) {
                 $this->stats['records_failed']++;
 
@@ -716,6 +732,55 @@ class ImportOviBaseFinance extends Command
                 );
             }
         }
+    }
+
+    /**
+     * Discover legacy table names using the exact casing returned by MySQL.
+     *
+     * Windows commonly treats MySQL table names case-insensitively, while
+     * Linux normally does not. Mapping them once makes the importer portable.
+     *
+     * @return array<string, string>
+     */
+    private function discoverLegacyTables(): array
+    {
+        $database = DB::connection('ovibase')
+            ->getDatabaseName();
+
+        $rows = DB::connection('ovibase')
+            ->select('SHOW TABLES');
+
+        $column = 'Tables_in_' . $database;
+        $tables = [];
+
+        foreach ($rows as $row) {
+            $values = (array) $row;
+            $actualName = $values[$column]
+                ?? reset($values);
+
+            if (! is_string($actualName)) {
+                continue;
+            }
+
+            $tables[Str::lower($actualName)] =
+                $actualName;
+        }
+
+        return $tables;
+    }
+
+    private function legacyTable(
+        string $logicalName
+    ): string {
+        $key = Str::lower($logicalName);
+
+        if (! isset($this->legacyTables[$key])) {
+            throw new \RuntimeException(
+                "The OviBase {$logicalName} table was not resolved."
+            );
+        }
+
+        return $this->legacyTables[$key];
     }
 
     private function resolveDefaultFund(): ?DonationFund
