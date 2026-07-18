@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Donations;
 
+use App\Filament\Concerns\AuthorizesModuleAccess;
+
 use App\Filament\Resources\Donations\Pages\CreateDonation;
 use App\Filament\Resources\Donations\Pages\EditDonation;
 use App\Filament\Resources\Donations\Pages\ListDonations;
@@ -10,6 +12,7 @@ use App\Filament\Resources\Donations\Schemas\DonationForm;
 use App\Filament\Resources\Donations\Schemas\DonationInfolist;
 use App\Filament\Resources\Donations\Tables\DonationsTable;
 use App\Models\Donation;
+use App\Support\Privacy\DonorPrivacy;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -20,6 +23,8 @@ use UnitEnum;
 
 class DonationResource extends Resource
 {
+    use AuthorizesModuleAccess;
+
     protected static ?string $model = Donation::class;
 
     protected static string|BackedEnum|null $navigationIcon =
@@ -63,7 +68,7 @@ class DonationResource extends Resource
         }
 
         if (filled($record->donor_name)) {
-            return $record->donor_name;
+            return DonorPrivacy::name($record->donor_name);
         }
 
         if ($record->member) {
@@ -76,11 +81,11 @@ class DonationResource extends Resource
                 ->implode(' ');
 
             if (filled($memberName)) {
-                return $memberName;
+                return DonorPrivacy::name($memberName);
             }
 
             if (filled($record->member->name ?? null)) {
-                return $record->member->name;
+                return DonorPrivacy::name($record->member->name);
             }
         }
 
@@ -89,15 +94,23 @@ class DonationResource extends Resource
 
     public static function getGloballySearchableAttributes(): array
     {
-        return [
-            'donor_name',
-            'donor_email',
-            'donor_phone',
+        $attributes = [
             'stripe_session_id',
             'stripe_payment_intent_id',
             'legacy_ovibase_id',
             'donationFund.name',
         ];
+
+        if (DonorPrivacy::canViewIdentity()) {
+            array_push(
+                $attributes,
+                'donor_name',
+                'donor_email',
+                'donor_phone'
+            );
+        }
+
+        return $attributes;
     }
 
     public static function getRelations(): array
@@ -115,5 +128,10 @@ class DonationResource extends Resource
             'view' => ViewDonation::route('/{record}'),
             'edit' => EditDonation::route('/{record}/edit'),
         ];
+    }
+
+    protected static function permissionModule(): string
+    {
+        return 'finance';
     }
 }

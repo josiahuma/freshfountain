@@ -6,15 +6,23 @@ use App\Models\ChurchUnit;
 use App\Models\Leader;
 use App\Models\Member;
 use App\Models\User;
+use App\Support\Access\BackendAccess;
+use App\Support\Access\BackendPermissions;
+use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use App\Services\Access\BackendInvitationService;
+use App\Services\Access\MemberBackendAccessService;
 
 class MemberForm
 {
@@ -329,6 +337,144 @@ class MemberForm
                             ),
                     ]),
 
+
+                Section::make('Backend Account')
+                    ->description(
+                        'Only super administrators can grant or change access to the /hub administration panel.'
+                    )
+                    ->visible(
+                        fn (): bool => BackendAccess::isSuperAdmin()
+                    )
+                    ->columns(2)
+                    ->schema([
+                        Toggle::make('backend_access_enabled')
+                            ->label('Allow this member to access /hub')
+                            ->helperText(
+                                'The existing website/LMS account will be reused. If none exists, a secure invitation will be emailed.'
+                            )
+                            ->live()
+                            ->columnSpanFull(),
+
+                        Placeholder::make('backend_account_status')
+                            ->label('Account status')
+                            ->content(
+                                fn (?Member $record): string =>
+                                    self::accountStatus($record)
+                            ),
+
+                        Placeholder::make('backend_linked_account')
+                            ->label('Linked account')
+                            ->content(
+                                fn (?Member $record): string =>
+                                    $record?->user?->email ?? 'Not created yet'
+                            ),
+
+                        Placeholder::make('backend_last_login')
+                            ->label('Last login')
+                            ->content(
+                                fn (?Member $record): string =>
+                                    $record?->user?->last_login_at
+                                        ? $record->user->last_login_at->format('d M Y, H:i')
+                                        : 'Never'
+                            ),
+
+                        Placeholder::make('backend_invitation_status')
+                            ->label('Invitation')
+                            ->content(
+                                fn (?Member $record): string =>
+                                    self::invitationStatus($record)
+                            ),
+
+                        Actions::make([
+                            Action::make('resend_backend_invitation')
+                                ->label('Send / resend setup link')
+                                ->icon('heroicon-o-envelope')
+                                ->requiresConfirmation()
+                                ->visible(
+                                    fn (?Member $record): bool =>
+                                        filled($record?->user_id)
+                                        && (bool) $record?->user?->has_backend_access
+                                )
+                                ->action(function (?Member $record): void {
+                                    if (! $record) {
+                                        return;
+                                    }
+
+                                    app(MemberBackendAccessService::class)
+                                        ->resendInvitation($record->fresh('user'));
+
+                                    Notification::make()
+                                        ->title('Account setup link sent')
+                                        ->success()
+                                        ->send();
+                                }),
+
+                            Action::make('cancel_backend_invitation')
+                                ->label('Cancel invitation')
+                                ->icon('heroicon-o-x-circle')
+                                ->color('warning')
+                                ->requiresConfirmation()
+                                ->modalDescription(
+                                    'The current setup link will stop working immediately.'
+                                )
+                                ->visible(
+                                    fn (?Member $record): bool =>
+                                        (bool) $record?->user?->latestBackendInvitation()?->isPending()
+                                )
+                                ->action(function (?Member $record): void {
+                                    if (! $record?->user) {
+                                        return;
+                                    }
+
+                                    app(BackendInvitationService::class)
+                                        ->cancel($record->user);
+
+                                    Notification::make()
+                                        ->title('Backend invitation cancelled')
+                                        ->success()
+                                        ->send();
+                                }),
+
+                            Action::make('deactivate_backend_account')
+                                ->label('Deactivate account')
+                                ->icon('heroicon-o-no-symbol')
+                                ->color('danger')
+                                ->requiresConfirmation()
+                                ->visible(
+                                    fn (?Member $record): bool =>
+                                        filled($record?->user_id)
+                                        && (bool) $record?->user?->has_backend_access
+                                        && ! (bool) $record?->user?->is_admin
+                                )
+                                ->action(function (?Member $record): void {
+                                    if (! $record) {
+                                        return;
+                                    }
+
+                                    app(MemberBackendAccessService::class)
+                                        ->deactivate($record->fresh('user'));
+
+                                    Notification::make()
+                                        ->title('Backend account deactivated')
+                                        ->success()
+                                        ->send();
+                                }),
+                        ])
+                            ->columnSpanFull(),
+                    ]),
+
+                Section::make('Backend Permissions')
+                    ->description(
+                        'Tick the exact areas this member may view or manage. Manage permission is separate from view permission.'
+                    )
+                    ->visible(
+                        fn (): bool => BackendAccess::isSuperAdmin()
+                    )
+                    ->columns(2)
+                    ->schema([
+                        ...self::permissionGroups(),
+                    ]),
+
                 Section::make(
                     'Communication Preferences'
                 )
@@ -396,4 +542,71 @@ class MemberForm
                 ),
             ]);
     }
+
+    private static function permissionGroups(): array
+    {
+        return collect(BackendPermissions::GROUPS)
+            ->map(function (array $definition, string $group): Section {
+                return Section::make($definition['label'])
+                    ->compact()
+                    ->schema([
+                        CheckboxList::make(
+                            BackendPermissions::formField($group)
+                        )
+                            ->label('Permissions')
+                            ->options(
+                                BackendPermissions::groupOptions($group)
+                            )
+                            ->columns(1)
+                            ->bulkToggleable()
+                            ->searchable()
+                            ->visible(
+                                fn ($get): bool =>
+                                    (bool) $get('backend_access_enabled')
+                            ),
+                    ]);
+            })
+            ->values()
+            ->all();
+    }
+
+    private static function accountStatus(?Member $record): string
+    {
+        $user = $record?->user;
+
+        if (! $user) {
+            return 'No account';
+        }
+
+        return $user->has_backend_access
+            ? 'Active'
+            : 'Inactive';
+    }
+
+    private static function invitationStatus(?Member $record): string
+    {
+        $invitation = $record?->user?->latestBackendInvitation();
+
+        if (! $invitation) {
+            return 'Not sent';
+        }
+
+        if ($invitation->accepted_at) {
+            return 'Accepted '.$invitation->accepted_at->format('d M Y, H:i');
+        }
+
+        if ($invitation->expires_at?->isPast()) {
+            return $invitation->sent_at
+                ? 'Expired — last sent '.$invitation->sent_at->format('d M Y, H:i')
+                : 'Cancelled or not delivered';
+        }
+
+        if (! $invitation->sent_at) {
+            return 'Not delivered';
+        }
+
+        return 'Sent '.$invitation->sent_at->format('d M Y, H:i')
+            .' — expires '.$invitation->expires_at?->format('d M Y, H:i');
+    }
+
 }

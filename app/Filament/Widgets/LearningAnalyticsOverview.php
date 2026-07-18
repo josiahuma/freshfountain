@@ -2,6 +2,8 @@
 
 namespace App\Filament\Widgets;
 
+use App\Support\Access\BackendAccess;
+
 use App\Filament\Resources\CourseEnrollments\CourseEnrollmentResource;
 use App\Models\Certificate;
 use App\Models\CourseEnrollment;
@@ -390,5 +392,10 @@ class LearningAnalyticsOverview extends StatsOverviewWidget
                 ->color('success')
                 ->url($completedUrl),
         ];
+    }
+
+    public static function canView(): bool
+    {
+        return BackendAccess::canView('learning');
     }
 }

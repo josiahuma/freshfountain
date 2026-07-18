@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Members;
 
+use App\Filament\Concerns\AuthorizesModuleAccess;
+
 use App\Filament\Resources\Members\Pages\CreateMember;
 use App\Filament\Resources\Members\Pages\EditMember;
 use App\Filament\Resources\Members\Pages\ListMembers;
@@ -21,6 +23,8 @@ use UnitEnum;
 
 class MemberResource extends Resource
 {
+    use AuthorizesModuleAccess;
+
     protected static ?string $model = Member::class;
 
     protected static string|BackedEnum|null $navigationIcon =
@@ -160,5 +164,10 @@ class MemberResource extends Resource
                     $record->membership_status
                 ),
         ];
+    }
+
+    protected static function permissionModule(): string
+    {
+        return 'members';
     }
 }

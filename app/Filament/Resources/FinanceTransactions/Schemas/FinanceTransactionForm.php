@@ -2,10 +2,12 @@
 
 namespace App\Filament\Resources\FinanceTransactions\Schemas;
 
+use App\Models\FinanceTransaction;
 use App\Support\Finance\Money;
 use App\Support\Finance\PaymentMethods;
 use App\Support\Finance\TransactionStatuses;
 use App\Support\Finance\TransactionTypes;
+use App\Support\Privacy\DonorPrivacy;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -142,6 +144,30 @@ class FinanceTransactionForm
                             ->label('Description')
                             ->placeholder(
                                 'e.g. Sunday offering or electricity bill'
+                            )
+                            ->formatStateUsing(
+                                fn (?string $state, ?FinanceTransaction $record): ?string =>
+                                    DonorPrivacy::transactionDescription($state, $record)
+                            )
+                            ->disabled(
+                                fn (?FinanceTransaction $record): bool =>
+                                    filled($record)
+                                    && $record->isDonorLinked()
+                                    && ! DonorPrivacy::canViewIdentity()
+                            )
+                            ->dehydrated(
+                                fn (?FinanceTransaction $record): bool =>
+                                    blank($record)
+                                    || ! $record->isDonorLinked()
+                                    || DonorPrivacy::canViewIdentity()
+                            )
+                            ->helperText(
+                                fn (?FinanceTransaction $record): ?string =>
+                                    filled($record)
+                                    && $record->isDonorLinked()
+                                    && ! DonorPrivacy::canViewIdentity()
+                                        ? 'The donor identity is protected. This description cannot be edited with your current permission.'
+                                        : null
                             )
                             ->required()
                             ->maxLength(255)

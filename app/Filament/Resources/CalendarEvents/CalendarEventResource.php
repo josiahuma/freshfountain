@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\CalendarEvents;
 
+use App\Filament\Concerns\AuthorizesModuleAccess;
+
 use App\Filament\Resources\CalendarEvents\Pages\CreateCalendarEvent;
 use App\Filament\Resources\CalendarEvents\Pages\EditCalendarEvent;
 use App\Filament\Resources\CalendarEvents\Pages\ListCalendarEvents;
@@ -18,6 +20,8 @@ use UnitEnum;
 
 class CalendarEventResource extends Resource
 {
+    use AuthorizesModuleAccess;
+
     protected static ?string $model = CalendarEvent::class;
 
     protected static string|BackedEnum|null $navigationIcon =
@@ -91,5 +95,10 @@ class CalendarEventResource extends Resource
     public static function getNavigationBadgeColor(): string|array|null
     {
         return 'success';
+    }
+
+    protected static function permissionModule(): string
+    {
+        return 'calendar';
     }
 }

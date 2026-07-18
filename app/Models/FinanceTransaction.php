@@ -174,6 +174,13 @@ class FinanceTransaction extends Model
             : $amount;
     }
 
+
+    public function isDonorLinked(): bool
+    {
+        return filled($this->donation_id)
+            || $this->source === self::SOURCE_DONATION;
+    }
+
     public function currencySymbol(): string
     {
         return match (

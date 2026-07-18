@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\BlogPosts;
 
+use App\Filament\Concerns\AuthorizesModuleAccess;
+
 use App\Filament\Resources\BlogPosts\Pages\CreateBlogPost;
 use App\Filament\Resources\BlogPosts\Pages\EditBlogPost;
 use App\Filament\Resources\BlogPosts\Pages\ListBlogPosts;
@@ -18,6 +20,8 @@ use Filament\Tables\Table;
 
 class BlogPostResource extends Resource
 {
+    use AuthorizesModuleAccess;
+
     protected static ?string $model = BlogPost::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
@@ -52,5 +56,10 @@ class BlogPostResource extends Resource
             'view' => ViewBlogPost::route('/{record}'),
             'edit' => EditBlogPost::route('/{record}/edit'),
         ];
+    }
+
+    protected static function permissionModule(): string
+    {
+        return 'blog';
     }
 }

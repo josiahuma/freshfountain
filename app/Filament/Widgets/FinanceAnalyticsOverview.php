@@ -2,6 +2,8 @@
 
 namespace App\Filament\Widgets;
 
+use App\Support\Access\BackendAccess;
+
 use App\Filament\Resources\Donations\DonationResource;
 use App\Filament\Resources\FinanceTransactions\FinanceTransactionResource;
 use App\Models\Donation;
@@ -200,5 +202,10 @@ class FinanceAnalyticsOverview extends StatsOverviewWidget
     private function money(float $amount): string
     {
         return '£' . number_format($amount, 2);
+    }
+
+    public static function canView(): bool
+    {
+        return BackendAccess::canView('finance');
     }
 }

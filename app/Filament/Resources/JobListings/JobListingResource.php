@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\JobListings;
 
+use App\Filament\Concerns\AuthorizesModuleAccess;
+
 use App\Filament\Resources\JobListings\Pages\CreateJobListing;
 use App\Filament\Resources\JobListings\Pages\EditJobListing;
 use App\Filament\Resources\JobListings\Pages\ListJobListings;
@@ -17,6 +19,8 @@ use UnitEnum;
 
 class JobListingResource extends Resource
 {
+    use AuthorizesModuleAccess;
+
     protected static ?string $model = JobListing::class;
 
     // ✅ Filament v4 typing
@@ -55,5 +59,10 @@ class JobListingResource extends Resource
             'create' => CreateJobListing::route('/create'),
             'edit'   => EditJobListing::route('/{record}/edit'),
         ];
+    }
+
+    protected static function permissionModule(): string
+    {
+        return 'careers';
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Courses\Resources\Lessons\Resources\Quizzes;
 
+use App\Filament\Concerns\AuthorizesModuleAccess;
+
 use App\Filament\Resources\Courses\Resources\Lessons\LessonResource;
 use App\Filament\Resources\Courses\Resources\Lessons\Resources\Quizzes\Pages\CreateQuiz;
 use App\Filament\Resources\Courses\Resources\Lessons\Resources\Quizzes\Pages\EditQuiz;
@@ -16,6 +18,8 @@ use Filament\Tables\Table;
 
 class QuizResource extends Resource
 {
+    use AuthorizesModuleAccess;
+
     protected static ?string $model = Quiz::class;
 
     protected static string|BackedEnum|null $navigationIcon =
@@ -54,5 +58,10 @@ class QuizResource extends Resource
                 '/{record}/edit'
             ),
         ];
+    }
+
+    protected static function permissionModule(): string
+    {
+        return 'learning';
     }
 }

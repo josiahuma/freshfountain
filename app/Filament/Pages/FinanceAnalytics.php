@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Support\Access\BackendAccess;
+
 use App\Filament\Widgets\FinanceAnalyticsOverview;
 use App\Filament\Widgets\FinanceIncomeExpenseChart;
 use BackedEnum;
@@ -42,5 +44,10 @@ class FinanceAnalytics extends Page
             FinanceAnalyticsOverview::class,
             FinanceIncomeExpenseChart::class,
         ];
+    }
+
+    public static function canAccess(): bool
+    {
+        return BackendAccess::canView('finance');
     }
 }

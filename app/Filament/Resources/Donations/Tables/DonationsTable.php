@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Donations\Tables;
 use App\Models\Donation;
 use App\Support\Finance\Money;
 use App\Support\Finance\PaymentMethods;
+use App\Support\Privacy\DonorPrivacy;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -38,7 +39,7 @@ class DonationsTable
                             }
 
                             if (filled($record->donor_name)) {
-                                return $record->donor_name;
+                                return DonorPrivacy::name($record->donor_name);
                             }
 
                             if ($record->member) {
@@ -51,21 +52,23 @@ class DonationsTable
                                     ->implode(' ');
 
                                 if (filled($memberName)) {
-                                    return $memberName;
+                                    return DonorPrivacy::name($memberName);
                                 }
 
                                 if (filled($record->member->name ?? null)) {
-                                    return $record->member->name;
+                                    return DonorPrivacy::name($record->member->name);
                                 }
 
                                 if (filled($record->member->full_name ?? null)) {
-                                    return $record->member->full_name;
+                                    return DonorPrivacy::name($record->member->full_name);
                                 }
 
-                                return 'Member #'.$record->member->getKey();
+                                return DonorPrivacy::canViewIdentity()
+                                    ? 'Member #'.$record->member->getKey()
+                                    : 'Hidden Member';
                             }
 
-                            return 'Guest Donor';
+                            return DonorPrivacy::canViewIdentity() ? 'Guest Donor' : 'Hidden Donor';
                         }
                     )
                     ->description(
@@ -75,21 +78,16 @@ class DonationsTable
                             }
 
                             if (filled($record->donor_email)) {
-                                return $record->donor_email;
+                                return DonorPrivacy::email($record->donor_email);
                             }
 
                             if (filled($record->donor_phone)) {
-                                return $record->donor_phone;
+                                return DonorPrivacy::phone($record->donor_phone);
                             }
 
                             return null;
                         }
                     )
-                    ->searchable([
-                        'donor_name',
-                        'donor_email',
-                        'donor_phone',
-                    ])
                     ->wrap(),
 
                 TextColumn::make('donationFund.name')
@@ -235,20 +233,19 @@ class DonationsTable
 
                 TextColumn::make('donor_email')
                     ->label('Email')
-                    ->searchable()
-                    ->copyable()
+                    ->formatStateUsing(fn (?string $state): ?string => DonorPrivacy::email($state))
                     ->placeholder('—')
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('donor_phone')
                     ->label('Telephone')
-                    ->searchable()
-                    ->copyable()
+                    ->formatStateUsing(fn (?string $state): ?string => DonorPrivacy::phone($state))
                     ->placeholder('—')
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('postcode')
                     ->label('Postcode')
+                    ->formatStateUsing(fn (?string $state): ?string => DonorPrivacy::text($state))
                     ->searchable()
                     ->placeholder('—')
                     ->toggleable(isToggledHiddenByDefault: true),

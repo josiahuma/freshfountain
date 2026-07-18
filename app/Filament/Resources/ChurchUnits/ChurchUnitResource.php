@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\ChurchUnits;
 
+use App\Filament\Concerns\AuthorizesModuleAccess;
+
 use App\Filament\Resources\ChurchUnits\Pages\CreateChurchUnit;
 use App\Filament\Resources\ChurchUnits\Pages\EditChurchUnit;
 use App\Filament\Resources\ChurchUnits\Pages\ListChurchUnits;
@@ -19,6 +21,8 @@ use UnitEnum;
 
 class ChurchUnitResource extends Resource
 {
+    use AuthorizesModuleAccess;
+
     protected static ?string $model =
         ChurchUnit::class;
 
@@ -111,5 +115,10 @@ class ChurchUnitResource extends Resource
             'alias',
             'description',
         ];
+    }
+
+    protected static function permissionModule(): string
+    {
+        return 'church_units';
     }
 }

@@ -16,26 +16,6 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GivingController;
 
-function pageViewFor(Page $page): string
-{
-    return match ($page->template) {
-        'home' => 'pages.home',
-        'service' => 'pages.service',
-        'services_index' => 'pages.services_index',
-        'about' => 'pages.about',
-        'leaders' => 'pages.leaders',
-        'contact' => 'pages.contact',
-        'jobs' => 'pages.jobs',
-        'blog' => 'pages.blog',
-        'course' => 'pages.course',
-        'courses_index' => 'pages.courses_index',
-        'units' => 'pages.units',
-        'units_index' => 'pages.units_index',
-        'giving' => 'pages.giving',
-        default => 'pages.service',
-    };
-}
-
 /*
 |--------------------------------------------------------------------------
 | Homepage
@@ -85,8 +65,25 @@ Route::get(
                 ->take(6)
                 ->values();
 
+        $view = match ($page->template) {
+                'home' => 'pages.home',
+                'service' => 'pages.service',
+                'services_index' => 'pages.services_index',
+                'about' => 'pages.about',
+                'leaders' => 'pages.leaders',
+                'contact' => 'pages.contact',
+                'jobs' => 'pages.jobs',
+                'blog' => 'pages.blog',
+                'course' => 'pages.course',
+                'courses_index' => 'pages.courses_index',
+                'units' => 'pages.units',
+                'units_index' => 'pages.units_index',
+                'giving' => 'pages.giving',
+                default => 'pages.service',
+            };
+
         return view(
-            pageViewFor($page),
+            $view,
             compact(
                 'page',
                 'calendarEvents'
@@ -640,8 +637,25 @@ Route::get(
             )
             ->firstOrFail();
 
+        $view = match ($page->template) {
+                'home' => 'pages.home',
+                'service' => 'pages.service',
+                'services_index' => 'pages.services_index',
+                'about' => 'pages.about',
+                'leaders' => 'pages.leaders',
+                'contact' => 'pages.contact',
+                'jobs' => 'pages.jobs',
+                'blog' => 'pages.blog',
+                'course' => 'pages.course',
+                'courses_index' => 'pages.courses_index',
+                'units' => 'pages.units',
+                'units_index' => 'pages.units_index',
+                'giving' => 'pages.giving',
+                default => 'pages.service',
+            };
+
         return view(
-            pageViewFor($page),
+            $view,
             compact('page')
         );
     }

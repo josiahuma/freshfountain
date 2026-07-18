@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Courses\Resources\Lessons;
 
+use App\Filament\Concerns\AuthorizesModuleAccess;
+
 use App\Filament\Resources\Courses\CourseResource;
 use App\Filament\Resources\Courses\Resources\Lessons\Pages\CreateLesson;
 use App\Filament\Resources\Courses\Resources\Lessons\Pages\EditLesson;
@@ -17,6 +19,8 @@ use Filament\Tables\Table;
 
 class LessonResource extends Resource
 {
+    use AuthorizesModuleAccess;
+
     protected static ?string $model = Lesson::class;
 
     protected static string|BackedEnum|null $navigationIcon =
@@ -56,5 +60,10 @@ class LessonResource extends Resource
                 '/{record}/edit'
             ),
         ];
+    }
+
+    protected static function permissionModule(): string
+    {
+        return 'learning';
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Support\Access\BackendAccess;
+
 use App\Filament\Widgets\LearningActivityChart;
 use App\Filament\Widgets\LearningAnalyticsOverview;
 use BackedEnum;
@@ -42,5 +44,10 @@ class LearningAnalytics extends Page
             LearningAnalyticsOverview::class,
             LearningActivityChart::class,
         ];
+    }
+
+    public static function canAccess(): bool
+    {
+        return BackendAccess::canView('learning');
     }
 }

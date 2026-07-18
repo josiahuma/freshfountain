@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\IncomeCategories;
 
+use App\Filament\Concerns\AuthorizesModuleAccess;
+
 use App\Filament\Resources\IncomeCategories\Pages\CreateIncomeCategory;
 use App\Filament\Resources\IncomeCategories\Pages\EditIncomeCategory;
 use App\Filament\Resources\IncomeCategories\Pages\ListIncomeCategories;
@@ -17,6 +19,8 @@ use UnitEnum;
 
 class IncomeCategoryResource extends Resource
 {
+    use AuthorizesModuleAccess;
+
     protected static ?string $model = IncomeCategory::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowTrendingUp;
@@ -55,5 +59,10 @@ class IncomeCategoryResource extends Resource
             'create' => CreateIncomeCategory::route('/create'),
             'edit' => EditIncomeCategory::route('/{record}/edit'),
         ];
+    }
+
+    protected static function permissionModule(): string
+    {
+        return 'finance';
     }
 }

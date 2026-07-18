@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\ExpenseCategories;
 
+use App\Filament\Concerns\AuthorizesModuleAccess;
+
 use App\Filament\Resources\ExpenseCategories\Pages\CreateExpenseCategory;
 use App\Filament\Resources\ExpenseCategories\Pages\EditExpenseCategory;
 use App\Filament\Resources\ExpenseCategories\Pages\ListExpenseCategories;
@@ -17,6 +19,8 @@ use UnitEnum;
 
 class ExpenseCategoryResource extends Resource
 {
+    use AuthorizesModuleAccess;
+
     protected static ?string $model = ExpenseCategory::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowTrendingDown;
@@ -55,5 +59,10 @@ class ExpenseCategoryResource extends Resource
             'create' => CreateExpenseCategory::route('/create'),
             'edit' => EditExpenseCategory::route('/{record}/edit'),
         ];
+    }
+
+    protected static function permissionModule(): string
+    {
+        return 'finance';
     }
 }

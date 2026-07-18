@@ -3,47 +3,86 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use RuntimeException;
 
 class MicrosoftGraphMailer
 {
     public function send(string $toEmail, string $subject, string $htmlBody): void
     {
-        $tenantId = config('services.ms_graph.tenant_id');
-        $clientId = config('services.ms_graph.client_id');
-        $clientSecret = config('services.ms_graph.client_secret');
-        $sender = config('services.ms_graph.sender');
+        $tenantId = (string) config('services.ms_graph.tenant_id');
+        $clientId = (string) config('services.ms_graph.client_id');
+        $clientSecret = (string) config('services.ms_graph.client_secret');
+        $sender = (string) config('services.ms_graph.sender');
 
-        // 1) Get access token (client credentials)
-        $tokenRes = Http::asForm()->post("https://login.microsoftonline.com/{$tenantId}/oauth2/v2.0/token", [
-            'client_id'     => $clientId,
-            'client_secret' => $clientSecret,
-            'scope'         => 'https://graph.microsoft.com/.default',
-            'grant_type'    => 'client_credentials',
-        ]);
-
-        if (! $tokenRes->successful()) {
-            throw new \RuntimeException('Graph token error: ' . $tokenRes->body());
+        foreach ([
+            'MS Graph tenant ID' => $tenantId,
+            'MS Graph client ID' => $clientId,
+            'MS Graph client secret' => $clientSecret,
+            'MS Graph sender' => $sender,
+        ] as $label => $value) {
+            if (blank($value)) {
+                throw new RuntimeException("{$label} is not configured.");
+            }
         }
 
-        $token = $tokenRes->json('access_token');
+        if (! filter_var($toEmail, FILTER_VALIDATE_EMAIL)) {
+            throw new RuntimeException('The recipient email address is invalid.');
+        }
 
-        // 2) Send mail
-        $sendRes = Http::withToken($token)->post("https://graph.microsoft.com/v1.0/users/{$sender}/sendMail", [
-            'message' => [
-                'subject' => $subject,
-                'body' => [
-                    'contentType' => 'HTML',
-                    'content' => $htmlBody,
-                ],
-                'toRecipients' => [
-                    ['emailAddress' => ['address' => $toEmail]],
-                ],
-            ],
-            'saveToSentItems' => true,
-        ]);
+        $tokenResponse = Http::asForm()
+            ->timeout(30)
+            ->retry(2, 500)
+            ->post(
+                "https://login.microsoftonline.com/{$tenantId}/oauth2/v2.0/token",
+                [
+                    'client_id' => $clientId,
+                    'client_secret' => $clientSecret,
+                    'scope' => 'https://graph.microsoft.com/.default',
+                    'grant_type' => 'client_credentials',
+                ]
+            );
 
-        if (! $sendRes->successful()) {
-            throw new \RuntimeException('Graph sendMail error: ' . $sendRes->body());
+        if (! $tokenResponse->successful()) {
+            throw new RuntimeException(
+                'Graph token error: '.$tokenResponse->body()
+            );
+        }
+
+        $token = $tokenResponse->json('access_token');
+
+        if (blank($token)) {
+            throw new RuntimeException('Microsoft Graph did not return an access token.');
+        }
+
+        $sendResponse = Http::withToken($token)
+            ->acceptJson()
+            ->timeout(30)
+            ->retry(2, 500)
+            ->post(
+                'https://graph.microsoft.com/v1.0/users/'.rawurlencode($sender).'/sendMail',
+                [
+                    'message' => [
+                        'subject' => $subject,
+                        'body' => [
+                            'contentType' => 'HTML',
+                            'content' => $htmlBody,
+                        ],
+                        'toRecipients' => [
+                            [
+                                'emailAddress' => [
+                                    'address' => $toEmail,
+                                ],
+                            ],
+                        ],
+                    ],
+                    'saveToSentItems' => true,
+                ]
+            );
+
+        if (! $sendResponse->successful()) {
+            throw new RuntimeException(
+                'Graph sendMail error: '.$sendResponse->body()
+            );
         }
     }
 }

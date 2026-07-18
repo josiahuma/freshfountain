@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Pages;
 
+use App\Filament\Concerns\AuthorizesModuleAccess;
+
 use App\Filament\Resources\Pages\Pages\CreatePage;
 use App\Filament\Resources\Pages\Pages\EditPage;
 use App\Filament\Resources\Pages\Pages\ListPages;
@@ -18,6 +20,8 @@ use Filament\Tables\Table;
 
 class PageResource extends Resource
 {
+    use AuthorizesModuleAccess;
+
     protected static ?string $model = Page::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
@@ -66,4 +70,9 @@ class PageResource extends Resource
         return auth()->user()->can('pages.edit');
     }
 
+
+    protected static function permissionModule(): string
+    {
+        return 'website';
+    }
 }

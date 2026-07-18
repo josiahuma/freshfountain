@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\DonationFunds;
 
+use App\Filament\Concerns\AuthorizesModuleAccess;
+
 use App\Filament\Resources\DonationFunds\Pages\CreateDonationFund;
 use App\Filament\Resources\DonationFunds\Pages\EditDonationFund;
 use App\Filament\Resources\DonationFunds\Pages\ListDonationFunds;
@@ -17,6 +19,8 @@ use UnitEnum;
 
 class DonationFundResource extends Resource
 {
+    use AuthorizesModuleAccess;
+
     protected static ?string $model = DonationFund::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBanknotes;
@@ -55,5 +59,10 @@ class DonationFundResource extends Resource
             'create' => CreateDonationFund::route('/create'),
             'edit' => EditDonationFund::route('/{record}/edit'),
         ];
+    }
+
+    protected static function permissionModule(): string
+    {
+        return 'finance';
     }
 }

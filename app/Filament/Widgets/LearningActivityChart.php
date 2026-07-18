@@ -2,6 +2,8 @@
 
 namespace App\Filament\Widgets;
 
+use App\Support\Access\BackendAccess;
+
 use App\Models\Certificate;
 use App\Models\CourseEnrollment;
 use Carbon\CarbonImmutable;
@@ -172,5 +174,10 @@ class LearningActivityChart extends ChartWidget
                 ],
             ],
         ];
+    }
+
+    public static function canView(): bool
+    {
+        return BackendAccess::canView('learning');
     }
 }

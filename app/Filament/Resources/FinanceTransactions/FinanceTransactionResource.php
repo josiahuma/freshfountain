@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\FinanceTransactions;
 
+use App\Filament\Concerns\AuthorizesModuleAccess;
+
 use App\Filament\Resources\FinanceTransactions\Pages\CreateFinanceTransaction;
 use App\Filament\Resources\FinanceTransactions\Pages\EditFinanceTransaction;
 use App\Filament\Resources\FinanceTransactions\Pages\ListFinanceTransactions;
@@ -17,6 +19,8 @@ use UnitEnum;
 
 class FinanceTransactionResource extends Resource
 {
+    use AuthorizesModuleAccess;
+
     protected static ?string $model = FinanceTransaction::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowsRightLeft;
@@ -55,5 +59,10 @@ class FinanceTransactionResource extends Resource
             'create' => CreateFinanceTransaction::route('/create'),
             'edit' => EditFinanceTransaction::route('/{record}/edit'),
         ];
+    }
+
+    protected static function permissionModule(): string
+    {
+        return 'finance';
     }
 }

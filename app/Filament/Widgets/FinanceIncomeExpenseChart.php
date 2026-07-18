@@ -2,6 +2,8 @@
 
 namespace App\Filament\Widgets;
 
+use App\Support\Access\BackendAccess;
+
 use App\Models\FinanceTransaction;
 use Carbon\CarbonImmutable;
 use Filament\Widgets\ChartWidget;
@@ -177,5 +179,10 @@ class FinanceIncomeExpenseChart extends ChartWidget
                 ],
             ],
         ];
+    }
+
+    public static function canView(): bool
+    {
+        return BackendAccess::canView('finance');
     }
 }

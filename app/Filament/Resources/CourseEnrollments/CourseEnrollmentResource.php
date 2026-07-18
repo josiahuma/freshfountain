@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\CourseEnrollments;
 
+use App\Filament\Concerns\AuthorizesModuleAccess;
+
 use App\Filament\Resources\CourseEnrollments\Pages\ListCourseEnrollments;
 use App\Filament\Resources\CourseEnrollments\Pages\ViewCourseEnrollment;
 use App\Filament\Resources\CourseEnrollments\Schemas\CourseEnrollmentInfolist;
@@ -17,6 +19,8 @@ use UnitEnum;
 
 class CourseEnrollmentResource extends Resource
 {
+    use AuthorizesModuleAccess;
+
     protected static ?string $model = CourseEnrollment::class;
 
     protected static string|BackedEnum|null $navigationIcon =
@@ -129,5 +133,10 @@ class CourseEnrollmentResource extends Resource
             'Status' =>
                 ucfirst($record->status),
         ];
+    }
+
+    protected static function permissionModule(): string
+    {
+        return 'learning';
     }
 }

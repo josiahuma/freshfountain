@@ -2,10 +2,12 @@
 
 namespace App\Filament\Resources\FinanceTransactions\Tables;
 
+use App\Models\FinanceTransaction;
 use App\Support\Finance\Money;
 use App\Support\Finance\PaymentMethods;
 use App\Support\Finance\TransactionStatuses;
 use App\Support\Finance\TransactionTypes;
+use App\Support\Privacy\DonorPrivacy;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -21,9 +23,7 @@ class FinanceTransactionsTable
     {
         return $table
             ->defaultSort('transaction_date', 'desc')
-
             ->columns([
-
                 TextColumn::make('transaction_date')
                     ->label('Date')
                     ->date('d M Y')
@@ -43,7 +43,11 @@ class FinanceTransactionsTable
                     ->sortable(),
 
                 TextColumn::make('description')
-                    ->searchable()
+                    ->formatStateUsing(
+                        fn (?string $state, FinanceTransaction $record): ?string =>
+                            DonorPrivacy::transactionDescription($state, $record)
+                    )
+                    ->searchable(DonorPrivacy::canViewIdentity())
                     ->sortable()
                     ->weight('bold')
                     ->limit(45),
@@ -114,9 +118,7 @@ class FinanceTransactionsTable
                     ->sortable()
                     ->toggleable(),
             ])
-
             ->filters([
-
                 SelectFilter::make('type')
                     ->options(TransactionTypes::options()),
 
@@ -135,11 +137,9 @@ class FinanceTransactionsTable
                     ->label('Linked Donation')
                     ->nullable(),
             ])
-
             ->recordActions([
                 EditAction::make(),
             ])
-
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

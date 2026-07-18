@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Leaders;
 
+use App\Filament\Concerns\AuthorizesModuleAccess;
+
 use App\Filament\Resources\Leaders\Pages\CreateLeader;
 use App\Filament\Resources\Leaders\Pages\EditLeader;
 use App\Filament\Resources\Leaders\Pages\ListLeaders;
@@ -19,6 +21,8 @@ use UnitEnum;
 
 class LeaderResource extends Resource
 {
+    use AuthorizesModuleAccess;
+
     protected static ?string $model = Leader::class;
 
     protected static string|BackedEnum|null $navigationIcon =
@@ -118,5 +122,10 @@ class LeaderResource extends Resource
             'Email' => $record->email
                 ?: 'Not provided',
         ];
+    }
+
+    protected static function permissionModule(): string
+    {
+        return 'leaders';
     }
 }

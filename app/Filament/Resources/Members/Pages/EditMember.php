@@ -5,6 +5,9 @@ namespace App\Filament\Resources\Members\Pages;
 use App\Filament\Resources\Members\MemberResource;
 use App\Models\ChurchUnitMember;
 use App\Models\Member;
+use App\Services\Access\MemberBackendAccessService;
+use App\Support\Access\BackendAccess;
+use App\Support\Access\BackendPermissions;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
@@ -16,6 +19,10 @@ class EditMember extends EditRecord
         MemberResource::class;
 
     protected array $selectedChurchUnitIds = [];
+
+    protected ?bool $backendAccessEnabled = null;
+
+    protected array $backendPermissions = [];
 
     protected function getHeaderActions(): array
     {
@@ -68,12 +75,40 @@ class EditMember extends EditRecord
                 (int) $member->church_unit_id;
         }
 
+        if (BackendAccess::isSuperAdmin()) {
+            $data['backend_access_enabled'] =
+                (bool) $member->user?->has_backend_access;
+
+            $permissionValues =
+                $member->user
+                    ?->getDirectPermissions()
+                    ->pluck('name')
+                    ->values()
+                    ->all() ?? [];
+
+            $data = array_merge(
+                $data,
+                BackendPermissions::splitForForm($permissionValues)
+            );
+        }
+
         return $data;
     }
 
     protected function mutateFormDataBeforeSave(
         array $data
     ): array {
+        if (BackendAccess::isSuperAdmin()) {
+            $this->backendAccessEnabled = (bool) (
+                $data['backend_access_enabled'] ?? false
+            );
+            $this->backendPermissions =
+                BackendPermissions::collectFromForm($data);
+        }
+
+        unset($data['backend_access_enabled']);
+        BackendPermissions::forgetFormFields($data);
+
         $this->selectedChurchUnitIds =
             collect(
                 $data[
@@ -331,5 +366,16 @@ class EditMember extends EditRecord
                 );
             }
         );
+
+        if (
+            BackendAccess::isSuperAdmin()
+            && $this->backendAccessEnabled !== null
+        ) {
+            app(MemberBackendAccessService::class)->sync(
+                $member->fresh('user'),
+                $this->backendAccessEnabled,
+                $this->backendPermissions
+            );
+        }
     }
 }

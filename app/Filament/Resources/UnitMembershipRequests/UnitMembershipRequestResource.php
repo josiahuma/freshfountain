@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\UnitMembershipRequests;
 
+use App\Filament\Concerns\AuthorizesModuleAccess;
+
 use App\Filament\Resources\UnitMembershipRequests\Pages\CreateUnitMembershipRequest;
 use App\Filament\Resources\UnitMembershipRequests\Pages\EditUnitMembershipRequest;
 use App\Filament\Resources\UnitMembershipRequests\Pages\ListUnitMembershipRequests;
@@ -19,6 +21,8 @@ use UnitEnum;
 
 class UnitMembershipRequestResource extends Resource
 {
+    use AuthorizesModuleAccess;
+
     protected static ?string $model =
         UnitMembershipRequest::class;
 
@@ -102,5 +106,10 @@ class UnitMembershipRequestResource extends Resource
     public static function getNavigationBadgeColor(): string|array|null
     {
         return 'warning';
+    }
+
+    protected static function permissionModule(): string
+    {
+        return 'unit_requests';
     }
 }
