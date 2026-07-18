@@ -14,6 +14,7 @@ use App\Models\Page;
 use App\Services\CalendarEventService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\GivingController;
 
 function pageViewFor(Page $page): string
 {
@@ -571,6 +572,51 @@ Route::get(
 )->name(
     'church-units.success'
 );
+
+/*|--------------------------------------------------------------------------
+| Online giving
+|--------------------------------------------------------------------------*/  
+
+Route::get(
+    '/give-online',
+    [
+        GivingController::class,
+        'index',
+    ]
+)->name('giving.index');
+
+Route::post(
+    '/give-online/checkout',
+    [
+        GivingController::class,
+        'checkout',
+    ]
+)->name('giving.checkout');
+
+Route::get(
+    '/give-online/success',
+    [
+        GivingController::class,
+        'success',
+    ]
+)->name('giving.success');
+
+Route::get(
+    '/give-online/cancel/{donation}',
+    [
+        GivingController::class,
+        'cancel',
+    ]
+)->name('giving.cancel');
+
+Route::post(
+    '/stripe/webhook',
+    [
+        GivingController::class,
+        'webhook',
+    ]
+)->name('stripe.webhook');
+
 
 /*
 |--------------------------------------------------------------------------
