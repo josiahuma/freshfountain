@@ -96,7 +96,21 @@ class GoogleSearchConsoleService
     {
         $client = new Client();
 
-        $client->setAuthConfig(env('GOOGLE_APPLICATION_CREDENTIALS'));
+        $credentialsPath = config('services.google_search_console.credentials');
+
+        if (! is_string($credentialsPath) || $credentialsPath === '') {
+            throw new \RuntimeException(
+                'Google Search Console credentials path is not configured.'
+            );
+        }
+
+        if (! is_file($credentialsPath)) {
+            throw new \RuntimeException(
+                "Google Search Console credentials file was not found at: {$credentialsPath}"
+            );
+        }
+
+        $client->setAuthConfig($credentialsPath);
         $client->addScope(SearchConsole::WEBMASTERS_READONLY);
 
         return new SearchConsole($client);
