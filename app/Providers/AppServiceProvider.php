@@ -10,6 +10,7 @@ use App\Models\LessonCompletion;
 use App\Models\QuizAttempt;
 use App\Observers\LessonCompletionObserver;
 use App\Observers\QuizAttemptObserver;
+use Stripe\Stripe;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         //
+        Stripe::setEnableTelemetry(false);
+
         Schema::defaultStringLength(191);
         CourseEnrollment::observe(
             CourseEnrollmentObserver::class
