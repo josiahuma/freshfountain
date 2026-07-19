@@ -615,9 +615,6 @@ Route::post(
 )->name('stripe.webhook');
 
 
-require __DIR__.'/attendance.php';
-
-
 /*
 |--------------------------------------------------------------------------
 | Catch-all CMS pages
@@ -668,4 +665,3 @@ Route::get(
         '^(?!admin$|_debug-upload-limits$|careers$|calendar$|sitemap\.xml$).+'
     )
     ->name('pages.show');
-
