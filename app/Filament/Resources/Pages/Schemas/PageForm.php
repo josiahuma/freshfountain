@@ -1,8 +1,9 @@
 <?php
-// gimscare-upgrade/app/Filament/Resources/Pages/Schemas/PageForm.php
+// freshfountain/app/Filament/Resources/Pages/Schemas/PageForm.php
 
 namespace App\Filament\Resources\Pages\Schemas;
 
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
@@ -707,6 +708,7 @@ class PageForm
                                         'image' => 'Single Image',
                                         'video' => 'Background Video',
                                         'slider' => 'Image Slider (3 slides)',
+                                        'campaign' => 'Event Countdown Campaign',
                                     ])
                                     ->default('image')
                                     ->live(),
@@ -797,6 +799,94 @@ class PageForm
                                             ->default('/services'),
                                     ])
                                     ->visible(fn ($get) => data_get($get('sections'), 'hero.type') === 'slider'),
+
+                                Select::make('sections.hero.campaign_status')
+                                    ->label('Campaign Status')
+                                    ->options([
+                                        'draft' => 'Draft',
+                                        'live' => 'Live',
+                                        'disabled' => 'Disabled',
+                                    ])
+                                    ->default('draft')
+                                    ->required()
+                                    ->visible(fn ($get) => data_get($get('sections'), 'hero.type') === 'campaign'),
+
+                                TextInput::make('sections.hero.campaign_kicker')
+                                    ->label('Small Top Text')
+                                    ->default('Coming Soon')
+                                    ->visible(fn ($get) => data_get($get('sections'), 'hero.type') === 'campaign'),
+
+                                TextInput::make('sections.hero.campaign_title')
+                                    ->label('Campaign Title')
+                                    ->placeholder('AFLAME 2026')
+                                    ->required(fn ($get) => data_get($get('sections'), 'hero.type') === 'campaign')
+                                    ->visible(fn ($get) => data_get($get('sections'), 'hero.type') === 'campaign'),
+
+                                Textarea::make('sections.hero.campaign_subtitle')
+                                    ->label('Campaign Subtitle')
+                                    ->placeholder('Worship • Word • Miracles')
+                                    ->rows(2)
+                                    ->visible(fn ($get) => data_get($get('sections'), 'hero.type') === 'campaign'),
+
+                                DateTimePicker::make('sections.hero.campaign_event_at')
+                                    ->label('Event Date & Time')
+                                    ->seconds(false)
+                                    ->native(false)
+                                    ->required(fn ($get) => data_get($get('sections'), 'hero.type') === 'campaign')
+                                    ->visible(fn ($get) => data_get($get('sections'), 'hero.type') === 'campaign'),
+
+                                TextInput::make('sections.hero.campaign_venue')
+                                    ->label('Venue (optional)')
+                                    ->visible(fn ($get) => data_get($get('sections'), 'hero.type') === 'campaign'),
+
+                                FileUpload::make('sections.hero.campaign_background_image')
+                                    ->label('Campaign Desktop Background Image')
+                                    ->disk('public')
+                                    ->directory('pages/home/campaigns')
+                                    ->visibility('public')
+                                    ->image()
+                                    ->imageEditor()
+                                    ->dehydrateStateUsing(fn ($state) => is_array($state) ? collect($state)->values()->first() : $state)
+                                    ->required(fn ($get) => data_get($get('sections'), 'hero.type') === 'campaign')
+                                    ->visible(fn ($get) => data_get($get('sections'), 'hero.type') === 'campaign'),
+
+                                FileUpload::make('sections.hero.campaign_mobile_background_image')
+                                    ->label('Campaign Mobile Background Image (optional)')
+                                    ->helperText('Portrait artwork works best. The desktop image is used when left empty.')
+                                    ->disk('public')
+                                    ->directory('pages/home/campaigns/mobile')
+                                    ->visibility('public')
+                                    ->image()
+                                    ->imageEditor()
+                                    ->dehydrateStateUsing(fn ($state) => is_array($state) ? collect($state)->values()->first() : $state)
+                                    ->visible(fn ($get) => data_get($get('sections'), 'hero.type') === 'campaign'),
+
+                                TextInput::make('sections.hero.campaign_primary_button_text')
+                                    ->label('Primary Button Text')
+                                    ->default('Register Now')
+                                    ->visible(fn ($get) => data_get($get('sections'), 'hero.type') === 'campaign'),
+
+                                TextInput::make('sections.hero.campaign_primary_button_link')
+                                    ->label('Primary Button Link')
+                                    ->placeholder('https://eventib.com/...')
+                                    ->visible(fn ($get) => data_get($get('sections'), 'hero.type') === 'campaign'),
+
+                                TextInput::make('sections.hero.campaign_secondary_button_text')
+                                    ->label('Secondary Button Text (optional)')
+                                    ->default('Learn More')
+                                    ->visible(fn ($get) => data_get($get('sections'), 'hero.type') === 'campaign'),
+
+                                TextInput::make('sections.hero.campaign_secondary_button_link')
+                                    ->label('Secondary Button Link (optional)')
+                                    ->placeholder('/events')
+                                    ->visible(fn ($get) => data_get($get('sections'), 'hero.type') === 'campaign'),
+
+                                Toggle::make('sections.hero.campaign_auto_revert')
+                                    ->label('Automatically revert to normal hero after the event')
+                                    ->default(true)
+                                    ->helperText('When enabled, the original image/video hero returns automatically once the event time passes.')
+                                    ->columnSpanFull()
+                                    ->visible(fn ($get) => data_get($get('sections'), 'hero.type') === 'campaign'),
                             ]),
 
                         // -----------------------------------------------------

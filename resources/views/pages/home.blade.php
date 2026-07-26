@@ -95,78 +95,271 @@
 </style>
 
 {{-- =========================================================
-  HERO — CHURCH STYLE (Heart Church inspired)
+  HERO — NORMAL OR EVENT COUNTDOWN CAMPAIGN
 ========================================================= --}}
 @php
   $hero = data_get($page->sections, 'hero', []);
+
+  $heroType = data_get($hero, 'type', 'video');
+
   $bg = data_get($hero, 'background_image');
   $bgUrl = $bg ? asset('storage/' . $bg) : null;
 
   $videoFile = data_get($hero, 'video_file');
   $videoFileUrl = $videoFile ? asset('storage/' . $videoFile) : null;
+
+  $campaignStatus = data_get($hero, 'campaign_status', 'draft');
+  $campaignAutoRevert = (bool) data_get($hero, 'campaign_auto_revert', true);
+  $campaignEventAtRaw = data_get($hero, 'campaign_event_at');
+  $campaignEventAt = null;
+
+  if ($campaignEventAtRaw) {
+      try {
+          $campaignEventAt = \Carbon\CarbonImmutable::parse(
+              $campaignEventAtRaw,
+              config('app.timezone')
+          );
+      } catch (\Throwable $e) {
+          $campaignEventAt = null;
+      }
+  }
+
+  $campaignHasExpired = $campaignEventAt
+      ? now(config('app.timezone'))->greaterThanOrEqualTo($campaignEventAt)
+      : false;
+
+  $campaignActive = $heroType === 'campaign'
+      && $campaignStatus === 'live'
+      && $campaignEventAt
+      && (! $campaignAutoRevert || ! $campaignHasExpired);
+
+  $campaignBackground = data_get($hero, 'campaign_background_image');
+  $campaignBackgroundUrl = $campaignBackground
+      ? asset('storage/' . $campaignBackground)
+      : $bgUrl;
+
+  $campaignMobileBackground = data_get($hero, 'campaign_mobile_background_image');
+  $campaignMobileBackgroundUrl = $campaignMobileBackground
+      ? asset('storage/' . $campaignMobileBackground)
+      : $campaignBackgroundUrl;
 @endphp
 
-<section class="relative">
-  <div class="relative h-[85vh] min-h-[640px] overflow-hidden bg-black">
-
-    {{-- Background --}}
-    @if($videoFileUrl)
-      <video
-        class="absolute inset-0 w-full h-full object-cover"
-        autoplay muted loop playsinline>
-        <source src="{{ $videoFileUrl }}" type="video/mp4">
-      </video>
-    @elseif($bgUrl)
-      <img
-        src="{{ $bgUrl }}"
-        class="absolute inset-0 w-full h-full object-cover"
-        alt="">
-    @endif
-
-    {{-- Soft colour wash (VERY important for church look) --}}
-    <div class="absolute inset-0 bg-gradient-to-br
-                from-sky-200/60
-                via-white/30
-                to-rose-200/60">
-    </div>
-
-    {{-- Darken edges for readability --}}
-    <div class="absolute inset-0 bg-black/35"></div>
-
-    {{-- Content --}}
-    <div class="relative h-full flex items-center justify-center text-center">
-      <div class="max-w-[900px] px-4 text-white">
-
-        <h1
-          class="text-4xl md:text-6xl lg:text-7xl
-                 font-serif font-semibold tracking-wide
-                 leading-tight">
-          {{ data_get($hero, 'title', 'Welcome to Fresh Fountain Network') }}
-        </h1>
-
-        @if(data_get($hero, 'subtitle'))
-          <p class="mt-6 text-lg md:text-2xl text-white/85 max-w-2xl mx-auto">
-            {{ data_get($hero, 'subtitle', 'A place to worship, grow, and belong') }}
-          </p>
+@if($campaignActive)
+  <section
+    id="ff-campaign-hero"
+    class="relative isolate min-h-[calc(100svh-72px)] overflow-hidden bg-slate-950 text-white"
+    data-event-at="{{ $campaignEventAt->toIso8601String() }}"
+    data-auto-revert="{{ $campaignAutoRevert ? '1' : '0' }}"
+  >
+    @if($campaignBackgroundUrl)
+      <picture class="absolute inset-0 -z-30">
+        @if($campaignMobileBackgroundUrl)
+          <source
+            media="(max-width: 767px)"
+            srcset="{{ $campaignMobileBackgroundUrl }}"
+          >
         @endif
 
-        <div class="mt-10">
-          <a
-            href="{{ data_get($hero, 'primary_button_link', '/about') }}"
-            class="inline-flex items-center justify-center
-                   rounded-lg bg-[rgb(var(--brand))] px-8 py-4
-                   text-white text-lg font-semibold
-                   hover:bg-black/80 transition">
-            {{ data_get($hero, 'primary_button_text', 'Our Heart') }}
-          </a>
-        </div>
+        <img
+          src="{{ $campaignBackgroundUrl }}"
+          alt="{{ data_get($hero, 'campaign_title', 'Upcoming event') }}"
+          class="h-full w-full object-cover object-center"
+        >
+      </picture>
+    @endif
 
+    <div class="absolute inset-0 -z-20 bg-black/55"></div>
+    <div class="absolute inset-0 -z-10 bg-gradient-to-b from-black/35 via-black/20 to-black/75"></div>
+
+    <div class="mx-auto flex min-h-[calc(100svh-72px)] max-w-[1500px] flex-col items-center justify-center px-4 py-16 text-center sm:px-6 lg:px-8">
+      @if(data_get($hero, 'campaign_kicker'))
+        <p class="text-xs font-black uppercase tracking-[0.32em] text-white/80 sm:text-sm md:text-base">
+          {{ data_get($hero, 'campaign_kicker') }}
+        </p>
+      @endif
+
+      <h1 class="mt-4 max-w-6xl text-4xl font-black uppercase leading-[0.9] tracking-[-0.045em] drop-shadow-2xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl">
+        {{ data_get($hero, 'campaign_title', 'Coming Soon') }}
+      </h1>
+
+      @if(data_get($hero, 'campaign_subtitle'))
+        <p class="mt-5 max-w-4xl text-base font-extrabold uppercase tracking-[0.18em] text-white/90 sm:text-lg md:text-2xl">
+          {{ data_get($hero, 'campaign_subtitle') }}
+        </p>
+      @endif
+
+      <div
+        class="mt-9 grid w-full max-w-6xl grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4"
+        aria-label="Countdown to {{ data_get($hero, 'campaign_title', 'event') }}"
+        aria-live="polite"
+      >
+        @foreach([
+          ['id' => 'days', 'label' => 'Days'],
+          ['id' => 'hours', 'label' => 'Hours'],
+          ['id' => 'minutes', 'label' => 'Minutes'],
+          ['id' => 'seconds', 'label' => 'Seconds'],
+        ] as $countdownPart)
+          <div class="rounded-2xl border border-white/20 bg-black/25 px-2 py-5 backdrop-blur-md sm:rounded-3xl sm:px-4 sm:py-7 lg:bg-black/20">
+            <div
+              id="ff-countdown-{{ $countdownPart['id'] }}"
+              class="tabular-nums text-[clamp(3.25rem,10vw,9.5rem)] font-black leading-none tracking-[-0.07em] drop-shadow-2xl"
+            >
+              00
+            </div>
+
+            <div class="mt-2 text-[10px] font-black uppercase tracking-[0.25em] text-white/75 sm:text-xs md:text-sm">
+              {{ $countdownPart['label'] }}
+            </div>
+          </div>
+        @endforeach
+      </div>
+
+      <div class="mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm font-bold text-white/85 sm:text-base">
+        <span>{{ $campaignEventAt->format('l, j F Y · g:i A') }}</span>
+
+        @if(data_get($hero, 'campaign_venue'))
+          <span class="hidden h-1.5 w-1.5 rounded-full bg-white/60 sm:block"></span>
+          <span>{{ data_get($hero, 'campaign_venue') }}</span>
+        @endif
+      </div>
+
+      <div class="mt-9 flex w-full max-w-xl flex-col justify-center gap-3 sm:flex-row">
+        @if(data_get($hero, 'campaign_primary_button_text') && data_get($hero, 'campaign_primary_button_link'))
+          <a
+            href="{{ data_get($hero, 'campaign_primary_button_link') }}"
+            class="inline-flex min-h-14 flex-1 items-center justify-center rounded-2xl bg-[rgb(var(--brand))] px-7 py-4 text-base font-black text-white shadow-2xl transition hover:bg-[rgb(var(--brand-dark))] sm:text-lg"
+          >
+            {{ data_get($hero, 'campaign_primary_button_text') }}
+          </a>
+        @endif
+
+        @if(data_get($hero, 'campaign_secondary_button_text') && data_get($hero, 'campaign_secondary_button_link'))
+          <a
+            href="{{ data_get($hero, 'campaign_secondary_button_link') }}"
+            class="inline-flex min-h-14 flex-1 items-center justify-center rounded-2xl border border-white/35 bg-white/10 px-7 py-4 text-base font-black text-white backdrop-blur-md transition hover:bg-white hover:text-slate-950 sm:text-lg"
+          >
+            {{ data_get($hero, 'campaign_secondary_button_text') }}
+          </a>
+        @endif
       </div>
     </div>
+  </section>
 
-  </div>
-</section>
+  @push('scripts')
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const hero = document.getElementById('ff-campaign-hero');
 
+        if (!hero) {
+          return;
+        }
+
+        const targetTime = new Date(hero.dataset.eventAt).getTime();
+        const autoRevert = hero.dataset.autoRevert === '1';
+
+        const elements = {
+          days: document.getElementById('ff-countdown-days'),
+          hours: document.getElementById('ff-countdown-hours'),
+          minutes: document.getElementById('ff-countdown-minutes'),
+          seconds: document.getElementById('ff-countdown-seconds'),
+        };
+
+        let hasReloaded = false;
+
+        function pad(value) {
+          return String(value).padStart(2, '0');
+        }
+
+        function updateCountdown() {
+          const remaining = targetTime - Date.now();
+
+          if (!Number.isFinite(targetTime) || remaining <= 0) {
+            Object.values(elements).forEach(function (element) {
+              if (element) {
+                element.textContent = '00';
+              }
+            });
+
+            if (autoRevert && !hasReloaded) {
+              hasReloaded = true;
+              window.setTimeout(function () {
+                window.location.reload();
+              }, 1200);
+            }
+
+            return;
+          }
+
+          const totalSeconds = Math.floor(remaining / 1000);
+          const days = Math.floor(totalSeconds / 86400);
+          const hours = Math.floor((totalSeconds % 86400) / 3600);
+          const minutes = Math.floor((totalSeconds % 3600) / 60);
+          const seconds = totalSeconds % 60;
+
+          elements.days.textContent = pad(days);
+          elements.hours.textContent = pad(hours);
+          elements.minutes.textContent = pad(minutes);
+          elements.seconds.textContent = pad(seconds);
+        }
+
+        updateCountdown();
+        window.setInterval(updateCountdown, 1000);
+      });
+    </script>
+  @endpush
+@else
+  <section class="relative">
+    <div class="relative h-[85vh] min-h-[640px] overflow-hidden bg-black">
+
+      {{-- Background --}}
+      @if($videoFileUrl)
+        <video
+          class="absolute inset-0 h-full w-full object-cover"
+          autoplay
+          muted
+          loop
+          playsinline
+        >
+          <source src="{{ $videoFileUrl }}" type="video/mp4">
+        </video>
+      @elseif($bgUrl)
+        <img
+          src="{{ $bgUrl }}"
+          class="absolute inset-0 h-full w-full object-cover"
+          alt=""
+        >
+      @endif
+
+      <div class="absolute inset-0 bg-gradient-to-br from-sky-200/60 via-white/30 to-rose-200/60"></div>
+      <div class="absolute inset-0 bg-black/35"></div>
+
+      <div class="relative flex h-full items-center justify-center text-center">
+        <div class="max-w-[900px] px-4 text-white">
+          <h1 class="text-4xl font-serif font-semibold leading-tight tracking-wide md:text-6xl lg:text-7xl">
+            {{ data_get($hero, 'title', 'Welcome to Fresh Fountain Network') }}
+          </h1>
+
+          @if(data_get($hero, 'subtitle'))
+            <p class="mx-auto mt-6 max-w-2xl text-lg text-white/85 md:text-2xl">
+              {{ data_get($hero, 'subtitle', 'A place to worship, grow, and belong') }}
+            </p>
+          @endif
+
+          @if(data_get($hero, 'primary_button_text'))
+            <div class="mt-10">
+              <a
+                href="{{ data_get($hero, 'primary_button_link', '/about') }}"
+                class="inline-flex items-center justify-center rounded-lg bg-[rgb(var(--brand))] px-8 py-4 text-lg font-semibold text-white transition hover:bg-black/80"
+              >
+                {{ data_get($hero, 'primary_button_text', 'Our Heart') }}
+              </a>
+            </div>
+          @endif
+        </div>
+      </div>
+    </div>
+  </section>
+@endif
 
 {{-- =========================================================
   SERVICE TIMES — strong church section, not corporate
