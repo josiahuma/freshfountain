@@ -15,6 +15,7 @@ use App\Services\CalendarEventService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GivingController;
+use App\Http\Controllers\SafeguardingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -617,6 +618,8 @@ Route::post(
 
 require __DIR__.'/attendance.php';
 
+Route::get('/safeguarding', [SafeguardingController::class, 'index'])
+    ->name('safeguarding');
 
 /*
 |--------------------------------------------------------------------------

@@ -367,9 +367,26 @@
                             </a>
                         </li>
                     @empty
-                        <li><a href="/recruitment" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Vacancies</a></li>
-                        <li><a href="/safeguarding" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Safeguarding</a></li>
-                        <li><a href="/media-enquiries" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Media Enquiries</a></li>
+                        <li>
+                            <a href="/recruitment"
+                            class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">
+                                Vacancies
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="/safeguarding"
+                            class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">
+                                Safeguarding
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="/media-enquiries"
+                            class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">
+                                Media Enquiries
+                            </a>
+                        </li>
                     @endforelse
                 </ul>
 
