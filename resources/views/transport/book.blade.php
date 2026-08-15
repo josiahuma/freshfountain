@@ -1,5 +1,17 @@
 @extends('layouts.site')
 
+@section('title', 'Church Transport | Fresh Fountain')
+
+@section('meta_description', 'Book your Fresh Fountain church transport pickup for upcoming services and events.')
+
+@section('og_title', 'Church Transport | Fresh Fountain')
+
+@section('og_description', 'Need a ride to church? Book your Fresh Fountain pickup for upcoming services and events.')
+
+@section('og_url', url('/transport'))
+
+@section('og_image', asset('images/transport-share.jpg'))
+
 @section('content')
 @php($title = 'Book Church Pickup | Fresh Fountain')
 

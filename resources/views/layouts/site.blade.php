@@ -3,7 +3,30 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title ?? config('app.name') }}</title>
+    <title>@yield('title', $title ?? config('app.name'))</title>
+
+    <meta name="description"
+        content="@yield('meta_description', 'Fresh Fountain Christian Network — worship, discipleship, community and outreach.')">
+
+    {{-- Open Graph / WhatsApp / Facebook --}}
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Fresh Fountain Christian Network">
+    <meta property="og:title" content="@yield('og_title', $title ?? config('app.name'))">
+    <meta property="og:description"
+        content="@yield('og_description', 'Fresh Fountain Christian Network — worship, discipleship, community and outreach.')">
+    <meta property="og:url" content="@yield('og_url', url()->current())">
+    <meta property="og:image"
+        content="@yield('og_image', asset('images/social-share.jpg'))">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    {{-- X / Twitter --}}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('og_title', $title ?? config('app.name'))">
+    <meta name="twitter:description"
+        content="@yield('og_description', 'Fresh Fountain Christian Network — worship, discipleship, community and outreach.')">
+    <meta name="twitter:image"
+        content="@yield('og_image', asset('images/social-share.jpg'))">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
