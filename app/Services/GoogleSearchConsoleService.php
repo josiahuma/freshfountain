@@ -15,7 +15,10 @@ class GoogleSearchConsoleService
         return Cache::remember('gsc_dashboard_data', now()->addHours(6), function () {
             $service = $this->service();
 
-            $siteUrl = env('GOOGLE_SEARCH_CONSOLE_SITE_URL', 'https://freshfountain.org/');
+            $siteUrl = config(
+                'services.google_search_console.site_url',
+                'sc-domain:freshfountain.org'
+            );
 
             $startDate = now()->subDays(90)->toDateString();
             $endDate = now()->subDays(1)->toDateString();

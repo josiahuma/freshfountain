@@ -27,6 +27,11 @@ return [
     ],
     'google_search_console' => [
         'credentials' => env('GOOGLE_APPLICATION_CREDENTIALS'),
+
+        'site_url' => env(
+            'GOOGLE_SEARCH_CONSOLE_SITE_URL',
+            'sc-domain:freshfountain.org'
+        ),
     ],
 
     'webex_interact' => [
