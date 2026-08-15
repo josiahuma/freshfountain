@@ -16,6 +16,7 @@ final class BackendPermissions
         'unit_requests' => 'Unit Membership Requests',
         'finance' => 'Finance',
         'attendance' => 'Attendance',
+        'transport' => 'Transport',
         'sms' => 'SMS',
         'reports' => 'Reports',
     ];
@@ -27,6 +28,7 @@ final class BackendPermissions
         'learning' => ['label' => 'Learning Management', 'modules' => ['learning']],
         'finance' => ['label' => 'Finance', 'modules' => ['finance']],
         'attendance' => ['label' => 'Attendance', 'modules' => ['attendance']],
+        'transport' => ['label' => 'Transport', 'modules' => ['transport']],
         'future' => ['label' => 'Future Modules', 'modules' => ['sms', 'reports']],
     ];
 
