@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ChurchUnits\Schemas;
 
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -63,8 +64,28 @@ class ChurchUnitForm
                             ->default(0)
                             ->minValue(0),
 
+                        Textarea::make('short_description')
+                            ->label('Short description')
+                            ->rows(3)
+                            ->maxLength(300)
+                            ->helperText('Used on the Church Units listing cards and in the unit page hero. Keep this concise.')
+                            ->columnSpanFull(),
+
+                        FileUpload::make('feature_image')
+                            ->label('Feature / banner image')
+                            ->disk('public')
+                            ->directory('church-units')
+                            ->visibility('public')
+                            ->image()
+                            ->imageEditor()
+                            ->helperText('Displayed across the top of the unit card and as the hero banner on the individual unit page.')
+                            ->dehydrateStateUsing(fn ($state) => is_array($state) ? collect($state)->values()->first() : $state)
+                            ->columnSpanFull(),
+
                         Textarea::make('description')
-                            ->rows(4)
+                            ->label('Full description')
+                            ->rows(8)
+                            ->helperText('The detailed ministry description shown only in the body of the individual unit page.')
                             ->columnSpanFull(),
 
                         Toggle::make('is_active')
