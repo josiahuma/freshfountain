@@ -61,7 +61,7 @@
                                         <div>
                                             <h3 class="font-extrabold text-slate-950">{{ $leader->display_name }}</h3>
                                             <p class="mt-1 text-sm font-semibold text-blue-700">{{ $leader->leadership_role }}</p>
-                                            @if($leader->email)<p class="mt-2 text-sm text-slate-500">{{ $leader->email }}</p>@endif
+                                            @if($unit->email)<p class="mt-2 text-sm text-slate-500">{{ $unit->email }}</p>@endif
                                         </div>
                                     </div>
                                 </div>
