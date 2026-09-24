@@ -73,6 +73,14 @@ class FinanceAnalyticsOverview extends StatsOverviewWidget
             $yearEnd
         );
 
+        $totalIncome = $this->sumAllCompletedTransactions(
+            FinanceTransaction::TYPE_INCOME
+        );
+
+        $totalExpenses = $this->sumAllCompletedTransactions(
+            FinanceTransaction::TYPE_EXPENSE
+        );
+
         $giftAidEligible = Donation::query()
             ->where('status', Donation::STATUS_PAID)
             ->where('gift_aid', true)
@@ -175,6 +183,24 @@ class FinanceAnalyticsOverview extends StatsOverviewWidget
                 ->descriptionIcon('heroicon-m-receipt-percent')
                 ->color('warning')
                 ->url($donationsUrl),
+
+            Stat::make(
+                'Total income',
+                $this->money($totalIncome)
+            )
+                ->description('All completed income recorded')
+                ->descriptionIcon('heroicon-m-arrow-down-circle')
+                ->color('success')
+                ->url($transactionsUrl),
+
+            Stat::make(
+                'Total expenses',
+                $this->money($totalExpenses)
+            )
+                ->description('All completed expenses recorded')
+                ->descriptionIcon('heroicon-m-arrow-up-circle')
+                ->color('danger')
+                ->url($transactionsUrl),
         ];
     }
 
@@ -195,6 +221,18 @@ class FinanceAnalyticsOverview extends StatsOverviewWidget
                     $from->toDateString(),
                     $to->toDateString(),
                 ]
+            )
+            ->sum('amount');
+    }
+
+    private function sumAllCompletedTransactions(
+        string $type
+    ): float {
+        return (float) FinanceTransaction::query()
+            ->where('type', $type)
+            ->where(
+                'status',
+                FinanceTransaction::STATUS_COMPLETED
             )
             ->sum('amount');
     }
