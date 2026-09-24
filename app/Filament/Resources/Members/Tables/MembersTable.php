@@ -534,25 +534,61 @@ class MembersTable
                         'Do Not Contact'
                     ),
 
-                Filter::make(
-                    'birthdays_this_month'
+                SelectFilter::make(
+                    'birthday'
                 )
-                    ->label(
-                        'Birthdays This Month'
-                    )
+                    ->label('Birthday')
+                    ->options([
+                        'today' => 'Today',
+                        'next_7_days' => 'Next 7 Days',
+                        'next_30_days' => 'Next 30 Days',
+                        'this_month' => 'This Month',
+                        'next_month' => 'Next Month',
+                    ])
                     ->query(
-                        fn (
-                            Builder $query
-                        ): Builder =>
-                            $query
-                                ->whereNotNull(
-                                    'date_of_birth'
-                                )
-                                ->whereMonth(
-                                    'date_of_birth',
-                                    now()->month
-                                )
-                    ),
+                        function (
+                            Builder $query,
+                            array $data
+                        ): Builder {
+                            $value =
+                                $data['value']
+                                ?? null;
+
+                            if (! $value) {
+                                return $query;
+                            }
+
+                            return match ($value) {
+                                'today' =>
+                                    $query->upcomingBirthdays(0, 0),
+
+                                'next_7_days' =>
+                                    $query->upcomingBirthdays(0, 7),
+
+                                'next_30_days' =>
+                                    $query->upcomingBirthdays(0, 30),
+
+                                'this_month' =>
+                                    $query
+                                        ->whereNotNull('date_of_birth')
+                                        ->whereMonth(
+                                            'date_of_birth',
+                                            now()->month
+                                        ),
+
+                                'next_month' =>
+                                    $query
+                                        ->whereNotNull('date_of_birth')
+                                        ->whereMonth(
+                                            'date_of_birth',
+                                            now()->addMonth()->month
+                                        ),
+
+                                default => $query,
+                            };
+                        }
+                    )
+                    ->native(false),
 
                 Filter::make(
                     'anniversaries_this_month'

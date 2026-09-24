@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -155,6 +156,90 @@ class Member extends Model
                 'date_of_birth',
                 now()->month
             );
+    }
+
+    public function scopeUpcomingBirthdays(
+        Builder $query,
+        int $fromDays = 0,
+        int $toDays = 30
+    ): Builder {
+        $today = CarbonImmutable::today();
+
+        $dates = collect(range($fromDays, $toDays))
+            ->map(
+                fn (int $days): CarbonImmutable =>
+                    $today->addDays($days)
+            )
+            ->unique(
+                fn (CarbonImmutable $date): string =>
+                    $date->format('m-d')
+            )
+            ->values();
+
+        return $query
+            ->whereNotNull('date_of_birth')
+            ->where(
+                function (Builder $birthdayQuery) use ($dates): void {
+                    foreach ($dates as $date) {
+                        $birthdayQuery->orWhere(
+                            function (Builder $dateQuery) use ($date): void {
+                                $dateQuery
+                                    ->whereMonth(
+                                        'date_of_birth',
+                                        $date->month
+                                    )
+                                    ->whereDay(
+                                        'date_of_birth',
+                                        $date->day
+                                    );
+                            }
+                        );
+                    }
+                }
+            );
+    }
+
+    public function getNextBirthdayAttribute(): ?CarbonImmutable
+    {
+        if (! $this->date_of_birth) {
+            return null;
+        }
+
+        $today = CarbonImmutable::today();
+        $month = (int) $this->date_of_birth->month;
+        $day = (int) $this->date_of_birth->day;
+
+        $birthday = $this->birthdayInYear(
+            $today->year,
+            $month,
+            $day
+        );
+
+        if ($birthday->lt($today)) {
+            $birthday = $this->birthdayInYear(
+                $today->year + 1,
+                $month,
+                $day
+            );
+        }
+
+        return $birthday;
+    }
+
+    private function birthdayInYear(
+        int $year,
+        int $month,
+        int $day
+    ): CarbonImmutable {
+        $firstOfMonth = CarbonImmutable::create(
+            $year,
+            $month,
+            1
+        )->startOfDay();
+
+        return $firstOfMonth->day(
+            min($day, $firstOfMonth->daysInMonth)
+        );
     }
 
     public function scopeAnniversaryThisMonth(

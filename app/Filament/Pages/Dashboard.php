@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Widgets\DashboardOverview;
+use App\Filament\Widgets\UpcomingBirthdays;
 use Filament\Pages\Dashboard as BaseDashboard;
 
 class Dashboard extends BaseDashboard
@@ -16,6 +17,7 @@ class Dashboard extends BaseDashboard
     {
         return [
             DashboardOverview::class,
+            UpcomingBirthdays::class,
         ];
     }
 }
