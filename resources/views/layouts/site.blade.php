@@ -161,7 +161,7 @@
                 <a href="/#watch" class="transition">Watch Services</a>
                 <a href="/#event-section" class="transition">What's On</a>
                 <a href="/events" class="transition">Major Events</a>
-                <a href="/units" class="transition">Get Involved</a>
+                <a href="/church-units" class="transition">Get Involved</a>
                 <a href="/courses" class="transition">Courses</a>
                 <a href="/contact" class="transition">Contact</a>
 
@@ -245,7 +245,7 @@
             <a href="/#watch" class="hover:text-white transition" onclick="document.getElementById('navToggle').checked=false">Watch Services</a>
             <a href="/#event-section" class="hover:text-white transition" onclick="document.getElementById('navToggle').checked=false">What's On</a>
             <a href="/events" class="hover:text-white transition" onclick="document.getElementById('navToggle').checked=false">Major Events</a>
-            <a href="/units" class="hover:text-white transition" onclick="document.getElementById('navToggle').checked=false">Get Involved</a>
+            <a href="/church-units" class="hover:text-white transition" onclick="document.getElementById('navToggle').checked=false">Get Involved</a>
             <a href="/courses" class="hover:text-white transition" onclick="document.getElementById('navToggle').checked=false">Courses</a>
             <a href="/contact" class="hover:text-white transition" onclick="document.getElementById('navToggle').checked=false">Contact</a>
 
@@ -373,7 +373,7 @@
                 <ul class="mt-5 space-y-3 text-white/80">
                     <li><a href="/membership" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Become a member</a></li>
                     <li><a href="/baptism" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Get baptized</a></li>
-                    <li><a href="/units" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Join a unit</a></li>
+                    <li><a href="/church-units" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Join a unit</a></li>
                     <li><a href="/contact" class="hover:text-white underline underline-offset-4 decoration-white/30 hover:decoration-white transition">Speak to a leader</a></li>
                 </ul>
             </div>
