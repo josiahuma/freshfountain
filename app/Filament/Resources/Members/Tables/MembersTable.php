@@ -5,12 +5,15 @@ namespace App\Filament\Resources\Members\Tables;
 use App\Models\ChurchUnit;
 use App\Models\Leader;
 use App\Models\Member;
+use App\Models\SmsTemplate;
+use App\Services\Messaging\SmsTemplateService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Notifications\Notification;
+use Filament\Forms\Components\Select;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -747,6 +750,40 @@ class MembersTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('send_sms')
+                        ->label('Send SMS')
+                        ->icon(Heroicon::OutlinedChatBubbleLeftRight)
+                        ->color('info')
+                        ->modalHeading('Send SMS to selected members')
+                        ->modalDescription('Only members with a mobile number, SMS consent and no Do Not Contact restriction will receive the message.')
+                        ->schema([
+                            Select::make('sms_template_id')
+                                ->label('SMS template')
+                                ->options(fn (): array => SmsTemplate::query()
+                                    ->where('is_active', true)
+                                    ->where('is_birthday', false)
+                                    ->orderBy('name')
+                                    ->pluck('name', 'id')
+                                    ->all())
+                                ->searchable()
+                                ->preload()
+                                ->native(false)
+                                ->required()
+                                ->helperText('Birthday templates are reserved for the dashboard birthday action.'),
+                        ])
+                        ->requiresConfirmation()
+                        ->action(function (Collection $records, array $data): void {
+                            $template = SmsTemplate::query()->where('is_active', true)->where('is_birthday', false)->findOrFail($data['sms_template_id']);
+                            $summary = app(SmsTemplateService::class)->sendToMembers($records, $template);
+
+                            Notification::make()
+                                ->title('SMS sending complete')
+                                ->body("Sent: {$summary['sent']} · Skipped: {$summary['skipped']} · Failed: {$summary['failed']}")
+                                ->success()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
+
                     BulkAction::make(
                         'archive'
                     )

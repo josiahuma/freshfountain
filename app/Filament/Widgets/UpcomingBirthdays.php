@@ -4,9 +4,12 @@ namespace App\Filament\Widgets;
 
 use App\Filament\Resources\Members\MemberResource;
 use App\Models\Member;
+use App\Models\SmsTemplate;
+use App\Services\Messaging\SmsTemplateService;
 use App\Support\Access\BackendAccess;
 use Carbon\CarbonImmutable;
 use Filament\Widgets\Widget;
+use Filament\Notifications\Notification;
 
 class UpcomingBirthdays extends Widget
 {
@@ -84,6 +87,45 @@ class UpcomingBirthdays extends Widget
                 ]
             ),
         ];
+    }
+
+    public function sendBirthdaySms(): void
+    {
+        $template = SmsTemplate::query()
+            ->where('is_active', true)
+            ->where('is_birthday', true)
+            ->latest('updated_at')
+            ->first();
+
+        if (! $template) {
+            Notification::make()
+                ->title('No birthday SMS template')
+                ->body('Create or activate an SMS template and mark it as the Birthday template first.')
+                ->warning()
+                ->send();
+            return;
+        }
+
+        $today = CarbonImmutable::today();
+        $members = Member::query()
+            ->active()
+            ->upcomingBirthdays(0, 0)
+            ->get()
+            ->filter(fn (Member $member): bool => $member->next_birthday?->isSameDay($today) === true)
+            ->values();
+
+        if ($members->isEmpty()) {
+            Notification::make()->title('No birthdays today')->info()->send();
+            return;
+        }
+
+        $summary = app(SmsTemplateService::class)->sendToMembers($members, $template);
+
+        Notification::make()
+            ->title('Birthday SMS sending complete')
+            ->body("Sent: {$summary['sent']} · Skipped: {$summary['skipped']} · Failed: {$summary['failed']}")
+            ->success()
+            ->send();
     }
 
     public static function canView(): bool

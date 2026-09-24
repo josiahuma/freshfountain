@@ -287,7 +287,11 @@
                     margin-top: 7px;
                 }
             }
-        </style>
+        
+        .ff-birthdays__send { margin-top: 12px; width: calc(100% - 24px); margin-left: 12px; margin-right: 12px; border: 0; border-radius: 10px; background: #1d4ed8; color: #fff; padding: 10px 12px; font-size: 12px; font-weight: 800; cursor: pointer; }
+        .ff-birthdays__send:hover { background: #1e40af; }
+        .ff-birthdays__send:disabled { opacity: .65; cursor: wait; }
+</style>
 
         <x-slot name="heading">
             <div class="ff-birthdays__heading">
@@ -329,6 +333,20 @@
                             </ul>
                         @else
                             <div class="ff-birthdays__empty-group">No birthdays today</div>
+                        @endif
+
+                        @if($todayBirthdays->isNotEmpty())
+                            <button
+                                type="button"
+                                class="ff-birthdays__send"
+                                wire:click="sendBirthdaySms"
+                                wire:confirm="Send the active Birthday SMS template to all eligible members celebrating today?"
+                                wire:loading.attr="disabled"
+                                wire:target="sendBirthdaySms"
+                            >
+                                <span wire:loading.remove wire:target="sendBirthdaySms">Send birthday SMS</span>
+                                <span wire:loading wire:target="sendBirthdaySms">Sending…</span>
+                            </button>
                         @endif
                     </section>
 
