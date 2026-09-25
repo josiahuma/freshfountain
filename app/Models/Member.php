@@ -14,6 +14,10 @@ class Member extends Model
 {
     use HasFactory;
 
+    public const TYPE_PERSON = 'person';
+
+    public const TYPE_FUNCTIONAL = 'functional';
+
     public const STATUS_ACTIVE = 'active';
 
     public const STATUS_INACTIVE = 'inactive';
@@ -26,6 +30,7 @@ class Member extends Model
 
     protected $fillable = [
         'user_id',
+        'record_type',
         'church_unit_id',
         'leader_id',
         'title',
@@ -136,10 +141,21 @@ class Member extends Model
         );
     }
 
+    public function scopePeople(Builder $query): Builder
+    {
+        return $query->where('record_type', self::TYPE_PERSON);
+    }
+
+    public function scopeFunctionalAccounts(Builder $query): Builder
+    {
+        return $query->where('record_type', self::TYPE_FUNCTIONAL);
+    }
+
     public function scopeActive(
         Builder $query
     ): Builder {
         return $query
+            ->people()
             ->where('is_active', true)
             ->where(
                 'membership_status',
@@ -285,16 +301,37 @@ class Member extends Model
 
     public function getCanReceiveEmailAttribute(): bool
     {
-        return filled($this->email)
+        return $this->isPerson()
+            && filled($this->email)
             && $this->email_consent
             && ! $this->do_not_contact;
     }
 
     public function getCanReceiveSmsAttribute(): bool
     {
-        return filled($this->mobile_number)
+        return $this->isPerson()
+            && filled($this->mobile_number)
             && $this->sms_consent
             && ! $this->do_not_contact;
+    }
+
+
+    public function isPerson(): bool
+    {
+        return ($this->record_type ?: self::TYPE_PERSON) === self::TYPE_PERSON;
+    }
+
+    public function isFunctionalAccount(): bool
+    {
+        return $this->record_type === self::TYPE_FUNCTIONAL;
+    }
+
+    public static function recordTypeOptions(): array
+    {
+        return [
+            self::TYPE_PERSON => 'Person / Member',
+            self::TYPE_FUNCTIONAL => 'Functional / Enterprise Account',
+        ];
     }
 
     public static function statusOptions(): array

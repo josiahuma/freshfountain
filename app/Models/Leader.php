@@ -88,7 +88,7 @@ class Leader extends Model
         return $this->hasMany(
             Member::class,
             'leader_id'
-        );
+        )->where('record_type', Member::TYPE_PERSON);
     }
 
     public function scopeActive(

@@ -18,8 +18,14 @@ class MemberInfolist
                 Section::make('Member Overview')
                     ->columns(3)
                     ->schema([
+                        TextEntry::make('record_type')
+                            ->label('Record type')
+                            ->state(fn (Member $record): string => Member::recordTypeOptions()[$record->record_type ?: Member::TYPE_PERSON] ?? 'Person / Member')
+                            ->badge()
+                            ->color(fn (Member $record): string => $record->is_functional_account ? 'warning' : 'success'),
+
                         TextEntry::make('full_name')
-                            ->label('Member')
+                            ->label(fn (Member $record): string => $record->is_functional_account ? 'Account' : 'Member')
                             ->state(
                                 fn (Member $record): string =>
                                     $record->full_name

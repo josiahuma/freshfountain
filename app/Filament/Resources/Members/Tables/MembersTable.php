@@ -71,6 +71,13 @@ class MembersTable
                     ->weight('bold')
                     ->wrap(),
 
+                TextColumn::make('record_type')
+                    ->label('Type')
+                    ->formatStateUsing(fn (?string $state): string => Member::recordTypeOptions()[$state ?: Member::TYPE_PERSON] ?? 'Person / Member')
+                    ->badge()
+                    ->color(fn (?string $state): string => $state === Member::TYPE_FUNCTIONAL ? 'warning' : 'success')
+                    ->sortable(),
+
                 TextColumn::make(
                     'churchUnit.name'
                 )
@@ -506,6 +513,23 @@ class MembersTable
                             )
                     ),
 
+                SelectFilter::make('record_type')
+                    ->label('Record Type')
+                    ->options(Member::recordTypeOptions())
+                    ->query(function (Builder $query, array $data): Builder {
+                        $value = $data['value'] ?? null;
+                        if ($value === Member::TYPE_PERSON) {
+                            return $query->where(fn (Builder $typeQuery): Builder => $typeQuery
+                                ->where('record_type', Member::TYPE_PERSON)
+                                ->orWhereNull('record_type'));
+                        }
+                        if ($value === Member::TYPE_FUNCTIONAL) {
+                            return $query->where('record_type', Member::TYPE_FUNCTIONAL);
+                        }
+                        return $query;
+                    })
+                    ->native(false),
+
                 SelectFilter::make(
                     'membership_status'
                 )
@@ -561,6 +585,8 @@ class MembersTable
                                 return $query;
                             }
 
+                            $query->people();
+
                             return match ($value) {
                                 'today' =>
                                     $query->upcomingBirthdays(0, 0),
@@ -604,6 +630,7 @@ class MembersTable
                             Builder $query
                         ): Builder =>
                             $query
+                                ->people()
                                 ->whereNotNull(
                                     'anniversary_date'
                                 )
@@ -774,6 +801,7 @@ class MembersTable
                         ->requiresConfirmation()
                         ->action(function (Collection $records, array $data): void {
                             $template = SmsTemplate::query()->where('is_active', true)->where('is_birthday', false)->findOrFail($data['sms_template_id']);
+                            $records = $records->filter(fn (Member $member): bool => $member->is_person);
                             $summary = app(SmsTemplateService::class)->sendToMembers($records, $template);
 
                             Notification::make()

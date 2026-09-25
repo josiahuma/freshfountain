@@ -92,6 +92,7 @@ class LeaderForm
                             ->options(
                                 fn (): array =>
                                     Member::query()
+                                        ->people()
                                         ->orderBy('first_name')
                                         ->orderBy('last_name')
                                         ->get()

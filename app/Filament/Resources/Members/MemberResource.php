@@ -91,6 +91,7 @@ class MemberResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         $count = Member::query()
+            ->people()
             ->where('is_active', true)
             ->count();
 

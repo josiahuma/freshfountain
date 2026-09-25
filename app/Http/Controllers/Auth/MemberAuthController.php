@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Member;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -48,6 +49,25 @@ class MemberAuthController extends Controller
             return back()
                 ->withErrors([
                     'email' => 'The email address or password is incorrect.',
+                ])
+                ->onlyInput('email');
+        }
+
+        $user = Auth::user();
+
+        $functionalAccount = Member::query()
+            ->where('user_id', $user->id)
+            ->where('record_type', Member::TYPE_FUNCTIONAL)
+            ->exists();
+
+        if ($functionalAccount) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()
+                ->withErrors([
+                    'email' => 'This is a church administration account. Please sign in through /hub.',
                 ])
                 ->onlyInput('email');
         }

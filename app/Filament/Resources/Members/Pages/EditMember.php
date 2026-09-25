@@ -24,6 +24,8 @@ class EditMember extends EditRecord
 
     protected array $backendPermissions = [];
 
+    protected ?string $backendLoginPassword = null;
+
     protected function getHeaderActions(): array
     {
         return [
@@ -78,6 +80,7 @@ class EditMember extends EditRecord
         if (BackendAccess::isSuperAdmin()) {
             $data['backend_access_enabled'] =
                 (bool) $member->user?->has_backend_access;
+            $data['backend_login_password'] = null;
 
             $permissionValues =
                 $member->user
@@ -104,10 +107,18 @@ class EditMember extends EditRecord
             );
             $this->backendPermissions =
                 BackendPermissions::collectFromForm($data);
+            $this->backendLoginPassword = $data['backend_login_password'] ?? null;
         }
 
-        unset($data['backend_access_enabled']);
+        unset(
+            $data['backend_access_enabled'],
+            $data['backend_login_password']
+        );
         BackendPermissions::forgetFormFields($data);
+
+        if (! BackendAccess::isSuperAdmin()) {
+            $data['record_type'] = $this->record->record_type ?: \App\Models\Member::TYPE_PERSON;
+        }
 
         $this->selectedChurchUnitIds =
             collect(
@@ -374,7 +385,8 @@ class EditMember extends EditRecord
             app(MemberBackendAccessService::class)->sync(
                 $member->fresh('user'),
                 $this->backendAccessEnabled,
-                $this->backendPermissions
+                $this->backendPermissions,
+                $this->backendLoginPassword
             );
         }
     }

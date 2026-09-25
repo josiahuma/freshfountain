@@ -28,6 +28,10 @@ class SmsTemplateService
 
     public function sendToMember(Member $member, SmsTemplate $template): array
     {
+        if (! $member->is_person) {
+            return ['status' => 'skipped', 'ok' => false, 'reason' => 'Functional accounts are excluded from member SMS.'];
+        }
+
         if (! $member->can_receive_sms) {
             return ['status' => 'skipped', 'ok' => false, 'reason' => 'No SMS consent, no mobile number, or member is marked do not contact.'];
         }

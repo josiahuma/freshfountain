@@ -16,6 +16,8 @@ class CreateMember extends CreateRecord
 
     protected array $backendPermissions = [];
 
+    protected ?string $backendLoginPassword = null;
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         if (BackendAccess::isSuperAdmin()) {
@@ -24,10 +26,18 @@ class CreateMember extends CreateRecord
             );
             $this->backendPermissions =
                 BackendPermissions::collectFromForm($data);
+            $this->backendLoginPassword = $data['backend_login_password'] ?? null;
         }
 
-        unset($data['backend_access_enabled']);
+        unset(
+            $data['backend_access_enabled'],
+            $data['backend_login_password']
+        );
         BackendPermissions::forgetFormFields($data);
+
+        if (! BackendAccess::isSuperAdmin()) {
+            $data['record_type'] = \App\Models\Member::TYPE_PERSON;
+        }
 
         return $data;
     }
@@ -41,7 +51,8 @@ class CreateMember extends CreateRecord
             app(MemberBackendAccessService::class)->sync(
                 $this->record,
                 $this->backendAccessEnabled,
-                $this->backendPermissions
+                $this->backendPermissions,
+                $this->backendLoginPassword
             );
         }
     }

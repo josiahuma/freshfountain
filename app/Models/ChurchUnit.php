@@ -93,7 +93,8 @@ class ChurchUnit extends Model
 
     public function primaryMembers(): HasMany
     {
-        return $this->hasMany(Member::class);
+        return $this->hasMany(Member::class)
+            ->where('record_type', Member::TYPE_PERSON);
     }
 
     public function members(): BelongsToMany
@@ -110,6 +111,7 @@ class ChurchUnit extends Model
                 'left_at',
                 'notes',
             ])
+            ->where('members.record_type', Member::TYPE_PERSON)
             ->withTimestamps();
     }
 

@@ -21,7 +21,6 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use App\Services\Access\BackendInvitationService;
 use App\Services\Access\MemberBackendAccessService;
 
 class MemberForm
@@ -31,6 +30,23 @@ class MemberForm
     ): Schema {
         return $schema
             ->components([
+                Section::make('Record Type')
+                    ->description('Person records are normal church members. Functional accounts are shared organisational identities such as Follow Up, Finance or Church Admin.')
+                    ->visible(fn (): bool => BackendAccess::isSuperAdmin())
+                    ->schema([
+                        Select::make('record_type')
+                            ->label('Record type')
+                            ->options(Member::recordTypeOptions())
+                            ->default(Member::TYPE_PERSON)
+                            ->required()
+                            ->live()
+                            ->native(false),
+                    ]),
+
+                Hidden::make('record_type')
+                    ->default(Member::TYPE_PERSON)
+                    ->visible(fn (): bool => ! BackendAccess::isSuperAdmin()),
+
                 Section::make(
                     'Personal Details'
                 )
@@ -40,6 +56,7 @@ class MemberForm
                     ->columns(3)
                     ->schema([
                         Select::make('title')
+                            ->visible(fn ($get): bool => $get('record_type') !== Member::TYPE_FUNCTIONAL)
                             ->options([
                                 'Mr' => 'Mr',
                                 'Mrs' => 'Mrs',
@@ -59,15 +76,15 @@ class MemberForm
                         TextInput::make(
                             'first_name'
                         )
-                            ->label(
-                                'First name'
-                            )
+                            ->label(fn ($get): string => $get('record_type') === Member::TYPE_FUNCTIONAL ? 'Account name' : 'First name')
+                            ->helperText(fn ($get): ?string => $get('record_type') === Member::TYPE_FUNCTIONAL ? 'For example: Follow Up, Finance, Church Admin or Waterbrooks.' : null)
                             ->required()
                             ->maxLength(255),
 
                         TextInput::make(
                             'middle_name'
                         )
+                            ->visible(fn ($get): bool => $get('record_type') !== Member::TYPE_FUNCTIONAL)
                             ->label(
                                 'Middle name'
                             )
@@ -76,12 +93,14 @@ class MemberForm
                         TextInput::make(
                             'last_name'
                         )
+                            ->visible(fn ($get): bool => $get('record_type') !== Member::TYPE_FUNCTIONAL)
                             ->label(
                                 'Last name'
                             )
                             ->maxLength(255),
 
                         Select::make('gender')
+                            ->visible(fn ($get): bool => $get('record_type') !== Member::TYPE_FUNCTIONAL)
                             ->options(
                                 Member::genderOptions()
                             )
@@ -90,6 +109,7 @@ class MemberForm
                         DatePicker::make(
                             'date_of_birth'
                         )
+                            ->visible(fn ($get): bool => $get('record_type') !== Member::TYPE_FUNCTIONAL)
                             ->label(
                                 'Date of birth'
                             )
@@ -103,6 +123,7 @@ class MemberForm
                         DatePicker::make(
                             'anniversary_date'
                         )
+                            ->visible(fn ($get): bool => $get('record_type') !== Member::TYPE_FUNCTIONAL)
                             ->label(
                                 'Wedding anniversary'
                             )
@@ -125,12 +146,17 @@ class MemberForm
                     ->columns(2)
                     ->schema([
                         TextInput::make('email')
+                            ->label(fn ($get): string => $get('record_type') === Member::TYPE_FUNCTIONAL ? 'Enterprise / functional email' : 'Email')
                             ->email()
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->required(fn ($get): bool => $get('record_type') === Member::TYPE_FUNCTIONAL)
+                            ->disabled(fn (?Member $record): bool => filled($record) && $record->isFunctionalAccount() && ! BackendAccess::isSuperAdmin())
+                            ->helperText(fn ($get): ?string => $get('record_type') === Member::TYPE_FUNCTIONAL ? 'This email is also the /hub login email when backend access is enabled.' : null),
 
                         TextInput::make(
                             'mobile_number'
                         )
+                            ->visible(fn ($get): bool => $get('record_type') !== Member::TYPE_FUNCTIONAL)
                             ->label(
                                 'Mobile number'
                             )
@@ -140,6 +166,7 @@ class MemberForm
                         TextInput::make(
                             'alternative_phone'
                         )
+                            ->visible(fn ($get): bool => $get('record_type') !== Member::TYPE_FUNCTIONAL)
                             ->label(
                                 'Alternative phone'
                             )
@@ -149,11 +176,13 @@ class MemberForm
                         TextInput::make(
                             'postcode'
                         )
+                            ->visible(fn ($get): bool => $get('record_type') !== Member::TYPE_FUNCTIONAL)
                             ->maxLength(30),
 
                         Textarea::make(
                             'address'
                         )
+                            ->visible(fn ($get): bool => $get('record_type') !== Member::TYPE_FUNCTIONAL)
                             ->rows(4)
                             ->columnSpanFull(),
                     ]),
@@ -194,6 +223,7 @@ class MemberForm
                         Select::make(
                             'membership_status'
                         )
+                            ->visible(fn ($get): bool => $get('record_type') !== Member::TYPE_FUNCTIONAL)
                             ->label(
                                 'Membership status'
                             )
@@ -209,6 +239,7 @@ class MemberForm
                         CheckboxList::make(
                             'church_unit_ids'
                         )
+                            ->visible(fn ($get): bool => $get('record_type') !== Member::TYPE_FUNCTIONAL)
                             ->label(
                                 'All church units'
                             )
@@ -243,6 +274,7 @@ class MemberForm
                         DatePicker::make(
                             'joined_at'
                         )
+                            ->visible(fn ($get): bool => $get('record_type') !== Member::TYPE_FUNCTIONAL)
                             ->label(
                                 'Date joined'
                             )
@@ -266,6 +298,7 @@ class MemberForm
                         Select::make(
                             'leader_id'
                         )
+                            ->visible(fn ($get): bool => $get('record_type') !== Member::TYPE_FUNCTIONAL)
                             ->label(
                                 'Primary assigned leader'
                             )
@@ -304,6 +337,7 @@ class MemberForm
                         Select::make(
                             'user_id'
                         )
+                            ->visible(fn ($get): bool => $get('record_type') !== Member::TYPE_FUNCTIONAL)
                             ->label(
                                 'Linked website/LMS account'
                             )
@@ -350,10 +384,22 @@ class MemberForm
                         Toggle::make('backend_access_enabled')
                             ->label('Allow this member to access /hub')
                             ->helperText(
-                                'The existing website/LMS account will be reused. If none exists, a secure invitation will be emailed.'
+                                'Activates backend access without sending an invitation email. The record email above is used as the /hub login email.'
                             )
                             ->live()
                             ->columnSpanFull(),
+
+                        TextInput::make('backend_login_password')
+                            ->label('Set / reset backend password')
+                            ->password()
+                            ->revealable()
+                            ->minLength(8)
+                            ->maxLength(255)
+                            ->dehydrateStateUsing(fn (?string $state): ?string => filled($state) ? $state : null)
+                            ->helperText(
+                                'Optional. Enter a password to set or reset it. Leave blank to keep the current password. For a new account, leaving this blank creates an inaccessible random password until you set one.'
+                            )
+                            ->columnSpan(1),
 
                         Placeholder::make('backend_account_status')
                             ->label('Account status')
@@ -363,10 +409,10 @@ class MemberForm
                             ),
 
                         Placeholder::make('backend_linked_account')
-                            ->label('Linked account')
+                            ->label('Backend login email')
                             ->content(
                                 fn (?Member $record): string =>
-                                    $record?->user?->email ?? 'Not created yet'
+                                    $record?->email ?? 'Enter an email address above'
                             ),
 
                         Placeholder::make('backend_last_login')
@@ -378,63 +424,11 @@ class MemberForm
                                         : 'Never'
                             ),
 
-                        Placeholder::make('backend_invitation_status')
-                            ->label('Invitation')
-                            ->content(
-                                fn (?Member $record): string =>
-                                    self::invitationStatus($record)
-                            ),
+                        Placeholder::make('backend_email_notice')
+                            ->label('Email invitation')
+                            ->content('Not sent — backend accounts are provisioned manually.'),
 
                         Actions::make([
-                            Action::make('resend_backend_invitation')
-                                ->label('Send / resend setup link')
-                                ->icon('heroicon-o-envelope')
-                                ->requiresConfirmation()
-                                ->visible(
-                                    fn (?Member $record): bool =>
-                                        filled($record?->user_id)
-                                        && (bool) $record?->user?->has_backend_access
-                                )
-                                ->action(function (?Member $record): void {
-                                    if (! $record) {
-                                        return;
-                                    }
-
-                                    app(MemberBackendAccessService::class)
-                                        ->resendInvitation($record->fresh('user'));
-
-                                    Notification::make()
-                                        ->title('Account setup link sent')
-                                        ->success()
-                                        ->send();
-                                }),
-
-                            Action::make('cancel_backend_invitation')
-                                ->label('Cancel invitation')
-                                ->icon('heroicon-o-x-circle')
-                                ->color('warning')
-                                ->requiresConfirmation()
-                                ->modalDescription(
-                                    'The current setup link will stop working immediately.'
-                                )
-                                ->visible(
-                                    fn (?Member $record): bool =>
-                                        (bool) $record?->user?->latestBackendInvitation()?->isPending()
-                                )
-                                ->action(function (?Member $record): void {
-                                    if (! $record?->user) {
-                                        return;
-                                    }
-
-                                    app(BackendInvitationService::class)
-                                        ->cancel($record->user);
-
-                                    Notification::make()
-                                        ->title('Backend invitation cancelled')
-                                        ->success()
-                                        ->send();
-                                }),
-
                             Action::make('deactivate_backend_account')
                                 ->label('Deactivate account')
                                 ->icon('heroicon-o-no-symbol')
@@ -463,6 +457,7 @@ class MemberForm
                             ->columnSpanFull(),
                     ]),
 
+
                 Section::make('Backend Permissions')
                     ->description(
                         'Tick the exact areas this member may view or manage. Manage permission is separate from view permission.'
@@ -478,6 +473,7 @@ class MemberForm
                 Section::make(
                     'Communication Preferences'
                 )
+                    ->visible(fn ($get): bool => $get('record_type') !== Member::TYPE_FUNCTIONAL)
                     ->description(
                         'Control whether this member may receive church communications.'
                     )

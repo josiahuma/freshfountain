@@ -13,96 +13,99 @@ use Spatie\Permission\Models\Permission;
 
 class MemberBackendAccessService
 {
-    public function __construct(
-        private readonly BackendInvitationService $invitations,
-    ) {
-    }
-
     public function sync(
         Member $member,
         bool $enabled,
-        array $permissions
+        array $permissions,
+        ?string $plainPassword = null,
     ): ?User {
-        if ($enabled && blank($member->email)) {
+        $loginEmail = filled($member->email)
+            ? strtolower(trim($member->email))
+            : null;
+
+        if ($enabled && blank($loginEmail)) {
             throw ValidationException::withMessages([
-                'email' => 'An email address is required before backend access can be enabled.',
+                'email' => 'An email address is required before /hub access can be enabled.',
             ]);
         }
 
-        [$user, $created] = DB::transaction(
-            function () use ($member, $enabled, $permissions): array {
-                $user = $member->user;
-                $created = false;
+        return DB::transaction(function () use (
+            $member,
+            $enabled,
+            $permissions,
+            $plainPassword,
+            $loginEmail
+        ): ?User {
+            $user = $member->user;
 
-                if (! $user && filled($member->email)) {
-                    $user = User::query()
-                        ->whereRaw('LOWER(email) = ?', [strtolower($member->email)])
-                        ->first();
-                }
-
-                if (! $enabled && ! $user) {
-                    return [null, false];
-                }
-
-                if (! $user) {
-                    $user = User::query()->create([
-                        'name' => $member->display_name ?: $member->full_name,
-                        'email' => strtolower($member->email),
-                        'password' => Hash::make(Str::random(64)),
-                        'is_admin' => false,
-                        'has_backend_access' => true,
-                    ]);
-                    $created = true;
-                } else {
-                    $user->forceFill([
-                        'name' => $member->display_name ?: $member->full_name,
-                        'email' => strtolower($member->email ?: $user->email),
-                        'has_backend_access' => $enabled || $user->is_admin,
-                    ])->save();
-                }
-
-                if ((int) $member->user_id !== (int) $user->id) {
-                    $member->forceFill(['user_id' => $user->id])->saveQuietly();
-                }
-
-                $allowed = collect($permissions)
-                    ->filter(fn (mixed $permission): bool =>
-                        is_string($permission)
-                        && in_array($permission, BackendPermissions::all(), true)
-                    )
-                    ->unique()
-                    ->values();
-
-                foreach ($allowed as $permission) {
-                    Permission::findOrCreate($permission, 'web');
-                }
-
-                if (! $user->is_admin && ! $user->hasRole('super-admin')) {
-                    $user->syncPermissions($enabled ? $allowed->all() : []);
-                }
-
-                return [$user->fresh(), $created];
+            if (! $user && filled($loginEmail)) {
+                $user = User::query()
+                    ->whereRaw('LOWER(email) = ?', [$loginEmail])
+                    ->first();
             }
-        );
 
-        if ($created && $user) {
-            $this->invitations->send($user);
-        }
+            if (! $enabled && ! $user) {
+                return null;
+            }
 
-        return $user;
-    }
+            if (! $user) {
+                $user = User::query()->create([
+                    'name' => $member->display_name ?: $member->full_name,
+                    'email' => $loginEmail,
+                    'password' => filled($plainPassword)
+                        ? Hash::make($plainPassword)
+                        : Hash::make(Str::random(64)),
+                    'is_admin' => false,
+                    'has_backend_access' => true,
+                ]);
+            } else {
+                if (
+                    filled($loginEmail)
+                    && User::query()
+                        ->whereRaw('LOWER(email) = ?', [$loginEmail])
+                        ->whereKeyNot($user->id)
+                        ->exists()
+                ) {
+                    throw ValidationException::withMessages([
+                        'email' => 'That email address is already used by another login account.',
+                    ]);
+                }
 
-    public function resendInvitation(Member $member): void
-    {
-        $user = $member->user;
+                $changes = [
+                    'name' => $member->display_name ?: $member->full_name,
+                    'email' => $loginEmail,
+                    'has_backend_access' => $enabled || $user->is_admin,
+                ];
 
-        if (! $user || ! $user->has_backend_access) {
-            throw ValidationException::withMessages([
-                'backend_access_enabled' => 'Enable backend access before sending an invitation.',
-            ]);
-        }
+                if (filled($plainPassword)) {
+                    $changes['password'] = Hash::make($plainPassword);
+                }
 
-        $this->invitations->send($user, true);
+                $user->forceFill($changes)->save();
+            }
+
+            if ((int) $member->user_id !== (int) $user->id) {
+                $member->forceFill(['user_id' => $user->id])->saveQuietly();
+            }
+
+            $allowed = collect($permissions)
+                ->filter(fn (mixed $permission): bool =>
+                    is_string($permission)
+                    && in_array($permission, BackendPermissions::all(), true)
+                )
+                ->unique()
+                ->values();
+
+            foreach ($allowed as $permission) {
+                Permission::findOrCreate($permission, 'web');
+            }
+
+            if (! $user->is_admin && ! $user->hasRole('super-admin')) {
+                $user->syncPermissions($enabled ? $allowed->all() : []);
+            }
+
+            return $user->fresh();
+        });
     }
 
     public function deactivate(Member $member): void
