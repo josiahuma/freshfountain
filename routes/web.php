@@ -80,6 +80,7 @@ Route::get(
                 'units' => 'pages.units',
                 'units_index' => 'pages.units_index',
                 'giving' => 'pages.giving',
+                'rooted_generation' => 'pages.rooted-generation',
                 default => 'pages.service',
             };
 
@@ -659,6 +660,7 @@ Route::get(
                 'units' => 'pages.units',
                 'units_index' => 'pages.units_index',
                 'giving' => 'pages.giving',
+                'rooted_generation' => 'pages.rooted-generation',
                 default => 'pages.service',
             };
 

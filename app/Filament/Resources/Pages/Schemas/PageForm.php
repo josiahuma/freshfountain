@@ -76,6 +76,7 @@ class PageForm
                                 'units' => 'Units Page',
                                 'units_index' => 'Units Listing Page',
                                 'giving' => 'Giving Page',
+                                'rooted_generation' => 'Rooted Generation Youth Ministry',
                             ])
                             ->default('service')
                             ->live(),
