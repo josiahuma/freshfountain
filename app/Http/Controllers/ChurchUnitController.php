@@ -10,6 +10,8 @@ class ChurchUnitController extends Controller
     {
         $units = ChurchUnit::query()
             ->active()
+            ->whereNotIn('slug', ['admin', 'administrative-unit'])
+            ->whereRaw('LOWER(name) NOT IN (?, ?)', ['admin', 'administrative unit'])
             ->ordered()
             ->withCount([
                 'leaders',
