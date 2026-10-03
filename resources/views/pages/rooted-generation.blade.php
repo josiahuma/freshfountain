@@ -12,7 +12,7 @@
     $thriveUpload = data_get($rooted, 'thrive_image');
 
     $connectImage = $heroUpload ? Storage::url($heroUpload) : asset('images/rooted-generation/rooted-connect.jpg');
-    $thriveImage = $thriveUpload ? Storage::url($thriveUpload) : asset('images/rooted-generation/thrive-summit.jpg');
+    $thriveImage = $thriveUpload ? Storage::url($thriveUpload) : asset('images/rooted-generation/thrive-summit-new.jpg');
 
     $objectives = data_get($rooted, 'objectives');
 
