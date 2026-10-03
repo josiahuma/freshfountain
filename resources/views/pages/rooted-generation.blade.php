@@ -185,9 +185,10 @@
                 <p class="mt-5 text-lg leading-8 text-slate-600">{{ data_get($rooted, 'summit_intro', 'A practical and welcoming summit helping international students and young people navigate life in the UK with greater confidence, useful resources and a community to lean on.') }}</p>
 
                 <div class="mt-7 grid gap-3 sm:grid-cols-2">
-                    <div class="rounded-2xl border border-orange-100 bg-white p-5"><p class="text-xs font-extrabold uppercase text-orange-600">Date</p><p class="mt-2 font-bold text-slate-950">{{ data_get($rooted, 'summit_date', 'Sunday, 11 October 2026') }}</p></div>
-                    <div class="rounded-2xl border border-orange-100 bg-white p-5"><p class="text-xs font-extrabold uppercase text-orange-600">Time</p><p class="mt-2 font-bold text-slate-950">{{ data_get($rooted, 'summit_time', '2:00 PM') }}</p></div>
+                    <div class="rounded-2xl border border-orange-100 bg-white p-5"><p class="text-xs font-extrabold uppercase text-orange-600">Date</p><p class="mt-2 font-bold text-slate-950">{{ data_get($rooted, 'summit_date', 'Saturday, 17 October 2026') }}</p></div>
+                    <div class="rounded-2xl border border-orange-100 bg-white p-5"><p class="text-xs font-extrabold uppercase text-orange-600">Time</p><p class="mt-2 font-bold text-slate-950">{{ data_get($rooted, 'summit_time', '1:00 PM to 4:00 PM') }}</p></div>
                     <div class="rounded-2xl border border-orange-100 bg-white p-5 sm:col-span-2"><p class="text-xs font-extrabold uppercase text-orange-600">Venue</p><p class="mt-2 font-bold text-slate-950">{{ data_get($rooted, 'summit_location', 'Fresh Fountain Centre, 7 Gregory Boulevard, Sherwood House, NG7 6LB') }}</p></div>
+                    <div class="rounded-2xl border border-orange-100 bg-white p-5 sm:col-span-2"><p class="text-xs font-extrabold uppercase text-orange-600">Register</p><p class="mt-2 font-bold text-slate-950"><a href="{{ data_get($rooted, 'summit_registration_link', 'https://eventib.com/events/01M41TXSKVRV7H04CHVWM2QW3T') }}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline hover:text-blue-800">Click here to register</a></p></div>
                 </div>
 
                 <h3 class="mt-10 text-2xl font-black text-slate-950">What we’ll explore</h3>
